@@ -1,0 +1,8 @@
+@import "tailwindcss";
+a[href*="tradingview.com"] {
+    display: none !important;
+}
+
+div[class*="tv-watermark"] {
+    display: none !important;
+}

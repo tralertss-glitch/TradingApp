@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="TradingApp/TradingApp.csproj" />
+  <Project Path="TradingAppFrontend/tradingappfrontend.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="TradingAppLibrary/TradingAppLibrary.csproj" />
+  <Project Path="TradingAppTest/TradingAppTest.csproj" Id="340bbe94-4273-445f-a95e-c7ef8c4c0dea" />
+</Solution>
