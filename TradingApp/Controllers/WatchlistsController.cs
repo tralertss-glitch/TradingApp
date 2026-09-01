@@ -111,6 +111,27 @@ public class WatchlistsController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Fjerner watchlist
+    /// </summary>
+    [HttpDelete("{watchlistId:int}")]
+    public async Task<IActionResult> DeleteWatchlist(int watchlistId)
+    {
+        var userId = GetCurrentUserId();
+
+        var success = await _watchlistService.DeleteWatchlistAsync(watchlistId, userId);
+
+        if (!success)
+        {
+            return NotFound(new
+            {
+                message = "Watchlist not found."
+            });
+        }
+
+        return NoContent();
+    }
+
     // Henter current user id.
     private int GetCurrentUserId()
     {

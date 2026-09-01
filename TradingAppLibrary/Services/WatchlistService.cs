@@ -64,4 +64,19 @@ public class WatchlistService : IWatchlistService
         await _watchlistRepository.RemoveItemAsync(watchlistId, symbolId);
         return true;
     }
+
+    // Fjerner watchlist.
+    public async Task<bool> DeleteWatchlistAsync(int watchlistId, int userId)
+    {
+        if (watchlistId <= 0 || userId <= 0)
+            return false;
+
+        var watchlist = await _watchlistRepository.GetByIdAsync(watchlistId);
+
+        if (watchlist == null || watchlist.UserId != userId)
+            return false;
+
+        await _watchlistRepository.DeleteAsync(watchlistId);
+        return true;
+    }
 }

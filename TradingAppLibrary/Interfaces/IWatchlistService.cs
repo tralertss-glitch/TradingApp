@@ -8,4 +8,5 @@ public interface IWatchlistService
     Task<WatchlistResponseDto> CreateWatchlistAsync(int userId, string name);
     Task<bool> AddSymbolToWatchlistAsync(AddWatchlistItemDto dto);
     Task<bool> RemoveSymbolFromWatchlistAsync(int watchlistId, int symbolId);
+    Task<bool> DeleteWatchlistAsync(int watchlistId, int userId);
 }
