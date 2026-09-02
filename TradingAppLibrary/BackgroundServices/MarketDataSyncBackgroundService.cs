@@ -14,11 +14,7 @@ public class MarketDataSyncBackgroundService : BackgroundService
     private readonly IMarketDataStreamControl _streamControl;
     private readonly ILogger<MarketDataSyncBackgroundService> _logger;
 
-    public MarketDataSyncBackgroundService(
-        IServiceScopeFactory scopeFactory,
-        IMarketDataRuntimeState runtimeState,
-        IMarketDataStreamControl streamControl,
-        ILogger<MarketDataSyncBackgroundService> logger)
+    public MarketDataSyncBackgroundService(IServiceScopeFactory scopeFactory, IMarketDataRuntimeState runtimeState, IMarketDataStreamControl streamControl, ILogger<MarketDataSyncBackgroundService> logger)
     {
         _scopeFactory = scopeFactory;
         _runtimeState = runtimeState;
@@ -102,8 +98,7 @@ public class MarketDataSyncBackgroundService : BackgroundService
             .Select(e => e.Code)
             .ToListAsync(cancellationToken);
 
-        await Task.WhenAll(
-            exchanges.Select(code => RunExchangeStreamAsync(code, cancellationToken)));
+        await Task.WhenAll(exchanges.Select(code => RunExchangeStreamAsync(code, cancellationToken)));
     }
 
     // Kører exchange stream.
@@ -126,11 +121,7 @@ public class MarketDataSyncBackgroundService : BackgroundService
                 var syncService = scope.ServiceProvider.GetRequiredService<IMarketDataSyncService>();
 
                 _logger.LogInformation("Starting realtime stream for {Exchange}", exchangeCode);
-                await syncService.StartRealtimeStreamAsync(
-                    exchangeCode,
-                    "1m",
-                    streamCancellation.Token);
-
+                await syncService.StartRealtimeStreamAsync(exchangeCode, "1m", streamCancellation.Token);
                 _runtimeState.SetRealtimeConnected(exchangeCode, false);
             }
             catch (OperationCanceledException) when (
@@ -139,9 +130,7 @@ public class MarketDataSyncBackgroundService : BackgroundService
             {
                 restartRequested = true;
                 _runtimeState.SetRealtimeConnected(exchangeCode, false);
-                _logger.LogInformation(
-                    "Realtime stream restart requested for {Exchange} because active symbols changed.",
-                    exchangeCode);
+                _logger.LogInformation("Realtime stream restart requested for {Exchange} because active symbols changed.", exchangeCode);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
