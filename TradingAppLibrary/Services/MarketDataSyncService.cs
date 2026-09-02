@@ -27,13 +27,7 @@ public class MarketDataSyncService : IMarketDataSyncService
 
     // Bagudkompatibel constructor: eksisterende host-projekter behøver ikke at registrere
     // ICandleValidator med det samme. Hvis DI-registreringen findes, bruges den fulde constructor nedenfor.
-    public MarketDataSyncService(
-        IExchangeServiceFactory exchangeServiceFactory,
-        ISymbolRepository symbolRepository,
-        ICandleRepository candleRepository,
-        AppDbContext dbContext,
-        IServiceScopeFactory scopeFactory,
-        IHubContext<MarketDataHub> hubContext)
+    public MarketDataSyncService(IExchangeServiceFactory exchangeServiceFactory, ISymbolRepository symbolRepository, ICandleRepository candleRepository, AppDbContext dbContext, IServiceScopeFactory scopeFactory, IHubContext<MarketDataHub> hubContext)
         : this(
             exchangeServiceFactory,
             symbolRepository,
@@ -47,16 +41,7 @@ public class MarketDataSyncService : IMarketDataSyncService
     {
     }
 
-    public MarketDataSyncService(
-        IExchangeServiceFactory exchangeServiceFactory,
-        ISymbolRepository symbolRepository,
-        ICandleRepository candleRepository,
-        ICandleValidator candleValidator,
-        AppDbContext dbContext,
-        IServiceScopeFactory scopeFactory,
-        IHubContext<MarketDataHub> hubContext,
-        ILogger<MarketDataSyncService> logger,
-        IMarketDataRuntimeState runtimeState)
+    public MarketDataSyncService(IExchangeServiceFactory exchangeServiceFactory, ISymbolRepository symbolRepository, ICandleRepository candleRepository, ICandleValidator candleValidator, AppDbContext dbContext, IServiceScopeFactory scopeFactory, IHubContext<MarketDataHub> hubContext, ILogger<MarketDataSyncService> logger, IMarketDataRuntimeState runtimeState)
     {
         _exchangeServiceFactory = exchangeServiceFactory;
         _symbolRepository = symbolRepository;
@@ -70,9 +55,7 @@ public class MarketDataSyncService : IMarketDataSyncService
     }
 
     // Synkroniserer symboler fra den valgte exchange med databasen.
-    public async Task SyncExchangeSymbolsAsync(
-        string exchangeCode,
-        CancellationToken cancellationToken = default)
+    public async Task SyncExchangeSymbolsAsync(string exchangeCode, CancellationToken cancellationToken = default)
     {
         var normalizedCode = exchangeCode.Trim().ToUpperInvariant();
         var exchange = await _dbContext.Exchanges
@@ -105,10 +88,7 @@ public class MarketDataSyncService : IMarketDataSyncService
     }
 
     // Synkroniserer historical candles.
-    public async Task SyncHistoricalCandlesAsync(
-        int symbolId,
-        string interval = "1m",
-        CancellationToken cancellationToken = default)
+    public async Task SyncHistoricalCandlesAsync(int symbolId, string interval = "1m", CancellationToken cancellationToken = default)
     {
         if (!string.Equals(interval, "1m", StringComparison.OrdinalIgnoreCase))
         {
@@ -270,10 +250,7 @@ public class MarketDataSyncService : IMarketDataSyncService
     }
 
     // Synkroniserer historiske candles for aktive symboler på den valgte exchange.
-    public async Task SyncExchangeHistoricalDataAsync(
-        string exchangeCode,
-        string interval = "1m",
-        CancellationToken cancellationToken = default)
+    public async Task SyncExchangeHistoricalDataAsync(string exchangeCode, string interval = "1m", CancellationToken cancellationToken = default)
     {
         var normalizedCode = exchangeCode.Trim().ToUpperInvariant();
         var exchange = await _dbContext.Exchanges.FirstOrDefaultAsync(
@@ -292,10 +269,7 @@ public class MarketDataSyncService : IMarketDataSyncService
     }
 
     // Starter realtime-streamen for aktive symboler på den valgte exchange.
-    public async Task StartRealtimeStreamAsync(
-        string exchangeCode,
-        string interval,
-        CancellationToken cancellationToken)
+    public async Task StartRealtimeStreamAsync(string exchangeCode, string interval, CancellationToken cancellationToken)
     {
         if (!string.Equals(interval, "1m", StringComparison.OrdinalIgnoreCase))
             throw new NotSupportedException("Realtime persistence yalnızca 1m candle için desteklenir.");
@@ -407,7 +381,6 @@ public class MarketDataSyncService : IMarketDataSyncService
             "1d" => 24 * 60 * 60_000L,
             _ => throw new ArgumentException($"Desteklenmeyen interval: {interval}")
         };
-
         return currentOpenTime + milliseconds;
     }
 }
