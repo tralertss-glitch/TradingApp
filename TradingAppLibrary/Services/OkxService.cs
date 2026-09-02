@@ -1,9 +1,9 @@
+using Microsoft.Extensions.Configuration;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Configuration;
 using TradingAppLibrary.Constants;
 using TradingAppLibrary.DTO;
 using TradingAppLibrary.Interfaces;
@@ -64,14 +64,11 @@ public sealed class OkxService : IExchangeService
                 quoteAsset.ToUpperInvariant(),
                 state.Equals("live", StringComparison.OrdinalIgnoreCase)));
         }
-
         return result;
     }
 
     // Henter top popular symbols.
-    public async Task<IReadOnlyList<string>> GetTopPopularSymbolsAsync(
-        int topCount = 50,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<string>> GetTopPopularSymbolsAsync(int topCount = 50, CancellationToken cancellationToken = default)
     {
         if (topCount <= 0) return Array.Empty<string>();
 
@@ -92,12 +89,7 @@ public sealed class OkxService : IExchangeService
     }
 
     // Henter historical candles.
-    public async Task<IReadOnlyList<ExchangeCandleDto>> GetHistoricalCandlesAsync(
-        string symbol,
-        string interval,
-        int limit = 500,
-        long? startTime = null,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ExchangeCandleDto>> GetHistoricalCandlesAsync(string symbol, string interval, int limit = 500, long? startTime = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(symbol) || string.IsNullOrWhiteSpace(interval))
             return Array.Empty<ExchangeCandleDto>();
@@ -154,16 +146,11 @@ public sealed class OkxService : IExchangeService
             if (requestCount % 10 == 0)
                 await Task.Delay(120, cancellationToken);
         }
-
         return candles.Values.Take(requestedLimit).ToList();
     }
 
     // Behandler stream real time candles.
-    public async Task StreamRealTimeCandlesAsync(
-        IReadOnlyCollection<string> symbols,
-        string interval,
-        Func<ExchangeCandleDto, Task> onCandleReceived,
-        CancellationToken cancellationToken)
+    public async Task StreamRealTimeCandlesAsync(IReadOnlyCollection<string> symbols, string interval, Func<ExchangeCandleDto, Task> onCandleReceived, CancellationToken cancellationToken)
     {
         var cleanSymbols = symbols
             .Where(s => !string.IsNullOrWhiteSpace(s))
@@ -281,10 +268,7 @@ public sealed class OkxService : IExchangeService
     }
 
     // Fortolker candles.
-    private static IEnumerable<ExchangeCandleDto> ParseCandles(
-        JsonElement data,
-        string symbol,
-        string interval)
+    private static IEnumerable<ExchangeCandleDto> ParseCandles(JsonElement data, string symbol, string interval)
     {
         foreach (var row in data.EnumerateArray())
         {
