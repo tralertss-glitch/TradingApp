@@ -73,6 +73,7 @@ builder.Services.AddScoped<ISymbolRepository, SymbolRepository>();
 builder.Services.AddScoped<IWatchlistRepository, WatchlistRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IExchangeRepository, ExchangeRepository>();
+builder.Services.AddScoped<IChartDrawingRepository, ChartDrawingRepository>();
 
 // -------------------------------------------------------------
 // 5. BAGGRUNDSSERVICE TIL MARKET DATA FRA FLERE EXCHANGES

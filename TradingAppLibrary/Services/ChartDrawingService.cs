@@ -1,6 +1,4 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
-using TradingAppLibrary.Data;
 using TradingAppLibrary.DTO;
 using TradingAppLibrary.Interfaces;
 using TradingAppLibrary.Models;
@@ -14,38 +12,24 @@ public class ChartDrawingService : IChartDrawingService
         "trendLine", "horizontalLine", "rectangle", "fibonacci", "text"
     };
 
-    private readonly AppDbContext _dbContext;
+    private readonly IChartDrawingRepository _chartDrawingRepository;
 
-    public ChartDrawingService(AppDbContext dbContext)
+    public ChartDrawingService(IChartDrawingRepository chartDrawingRepository)
     {
-        _dbContext = dbContext;
+        _chartDrawingRepository = chartDrawingRepository;
     }
 
     // Henter den relevante operation.
-    public async Task<IReadOnlyList<ChartDrawingResponseDto>> GetAsync(
-        int userId,
-        int symbolId,
-        string interval,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ChartDrawingResponseDto>> GetAsync(int userId, int symbolId, string interval, CancellationToken cancellationToken = default)
     {
         var normalizedInterval = NormalizeInterval(interval);
-
-        var drawings = await _dbContext.ChartDrawings
-            .AsNoTracking()
-            .Include(d => d.Symbol)
-                .ThenInclude(s => s.Exchange)
-            .Where(d => d.UserId == userId && d.SymbolId == symbolId && d.Interval == normalizedInterval)
-            .OrderBy(d => d.Id)
-            .ToListAsync(cancellationToken);
-
+        var drawings = await _chartDrawingRepository.GetAsync(
+            userId, symbolId, normalizedInterval, cancellationToken);
         return drawings.Select(ToResponseDto).ToList();
     }
 
     // Opretter den relevante operation.
-    public async Task<ChartDrawingResponseDto> CreateAsync(
-        int userId,
-        CreateChartDrawingDto dto,
-        CancellationToken cancellationToken = default)
+    public async Task<ChartDrawingResponseDto> CreateAsync(int userId, CreateChartDrawingDto dto, CancellationToken cancellationToken = default)
     {
         if (dto.SymbolId <= 0)
             throw new ArgumentException("Geçerli bir SymbolId zorunludur.");
@@ -54,9 +38,7 @@ public class ChartDrawingService : IChartDrawingService
         var drawingType = NormalizeDrawingType(dto.DrawingType);
         ValidateJson(dto.Data);
 
-        var symbol = await _dbContext.Symbols
-            .Include(s => s.Exchange)
-            .FirstOrDefaultAsync(s => s.Id == dto.SymbolId, cancellationToken)
+        var symbol = await _chartDrawingRepository.GetSymbolAsync(dto.SymbolId, cancellationToken)
             ?? throw new InvalidOperationException("Sembol bulunamadı.");
 
         var entity = new ChartDrawing
@@ -72,25 +54,17 @@ public class ChartDrawingService : IChartDrawingService
             Symbol = symbol
         };
 
-        _dbContext.ChartDrawings.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
+        await _chartDrawingRepository.AddAsync(entity, cancellationToken);
         return ToResponseDto(entity);
     }
 
     // Opdaterer den relevante operation.
-    public async Task<ChartDrawingResponseDto?> UpdateAsync(
-        int userId,
-        long drawingId,
-        UpdateChartDrawingDto dto,
-        CancellationToken cancellationToken = default)
+    public async Task<ChartDrawingResponseDto?> UpdateAsync(int userId, long drawingId, UpdateChartDrawingDto dto, CancellationToken cancellationToken = default)
     {
         ValidateJson(dto.Data);
 
-        var entity = await _dbContext.ChartDrawings
-            .Include(d => d.Symbol)
-                .ThenInclude(s => s.Exchange)
-            .FirstOrDefaultAsync(d => d.Id == drawingId && d.UserId == userId, cancellationToken);
+        var entity = await _chartDrawingRepository.GetByIdForUserAsync(
+            userId, drawingId, cancellationToken);
 
         if (entity == null) return null;
 
@@ -98,38 +72,26 @@ public class ChartDrawingService : IChartDrawingService
         entity.IsVisible = dto.IsVisible;
         entity.UpdatedAt = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _chartDrawingRepository.SaveChangesAsync(cancellationToken);
         return ToResponseDto(entity);
     }
 
     // Sletter den relevante operation.
-    public async Task<bool> DeleteAsync(
-        int userId,
-        long drawingId,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(int userId, long drawingId, CancellationToken cancellationToken = default)
     {
-        var entity = await _dbContext.ChartDrawings
-            .FirstOrDefaultAsync(d => d.Id == drawingId && d.UserId == userId, cancellationToken);
+        var entity = await _chartDrawingRepository.GetByIdForUserAsync(userId, drawingId, cancellationToken);
 
         if (entity == null) return false;
 
-        _dbContext.ChartDrawings.Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _chartDrawingRepository.DeleteAsync(entity, cancellationToken);
         return true;
     }
 
     // Sletter all.
-    public async Task<int> DeleteAllAsync(
-        int userId,
-        int symbolId,
-        string interval,
-        CancellationToken cancellationToken = default)
+    public async Task<int> DeleteAllAsync(int userId, int symbolId, string interval, CancellationToken cancellationToken = default)
     {
         var normalizedInterval = NormalizeInterval(interval);
-
-        return await _dbContext.ChartDrawings
-            .Where(d => d.UserId == userId && d.SymbolId == symbolId && d.Interval == normalizedInterval)
-            .ExecuteDeleteAsync(cancellationToken);
+        return await _chartDrawingRepository.DeleteAllAsync(userId, symbolId, normalizedInterval, cancellationToken);
     }
 
     // Normaliserer interval.
