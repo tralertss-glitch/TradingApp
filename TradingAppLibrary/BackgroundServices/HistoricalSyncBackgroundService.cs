@@ -13,12 +13,7 @@ public sealed class HistoricalSyncBackgroundService : BackgroundService
     private readonly IMarketDataStreamControl _streamControl;
     private readonly ILogger<HistoricalSyncBackgroundService> _logger;
 
-    public HistoricalSyncBackgroundService(
-        IHistoricalSyncQueue queue,
-        IServiceScopeFactory scopeFactory,
-        IMarketDataRuntimeState runtimeState,
-        IMarketDataStreamControl streamControl,
-        ILogger<HistoricalSyncBackgroundService> logger)
+    public HistoricalSyncBackgroundService(IHistoricalSyncQueue queue, IServiceScopeFactory scopeFactory, IMarketDataRuntimeState runtimeState, IMarketDataStreamControl streamControl, ILogger<HistoricalSyncBackgroundService> logger)
     {
         _queue = queue;
         _scopeFactory = scopeFactory;
@@ -51,22 +46,13 @@ public sealed class HistoricalSyncBackgroundService : BackgroundService
                 using var scope = _scopeFactory.CreateScope();
                 var syncService = scope.ServiceProvider.GetRequiredService<IMarketDataSyncService>();
 
-                _logger.LogInformation(
-                    "Queued historical sync started. Exchange={Exchange}, SymbolId={SymbolId}",
-                    job.ExchangeCode,
-                    job.SymbolId);
+                _logger.LogInformation("Queued historical sync started. Exchange={Exchange}, SymbolId={SymbolId}", job.ExchangeCode, job.SymbolId);
 
-                await syncService.SyncHistoricalCandlesAsync(
-                    job.SymbolId,
-                    "1m",
-                    stoppingToken);
+                await syncService.SyncHistoricalCandlesAsync(job.SymbolId, "1m", stoppingToken);
 
                 _runtimeState.ClearError(job.ExchangeCode);
 
-                _logger.LogInformation(
-                    "Queued historical sync completed. Exchange={Exchange}, SymbolId={SymbolId}",
-                    job.ExchangeCode,
-                    job.SymbolId);
+                _logger.LogInformation("Queued historical sync completed. Exchange={Exchange}, SymbolId={SymbolId}", job.ExchangeCode, job.SymbolId);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -75,11 +61,7 @@ public sealed class HistoricalSyncBackgroundService : BackgroundService
             catch (Exception ex)
             {
                 _runtimeState.RecordError(job.ExchangeCode, ex.Message);
-                _logger.LogError(
-                    ex,
-                    "Queued historical sync failed. Exchange={Exchange}, SymbolId={SymbolId}",
-                    job.ExchangeCode,
-                    job.SymbolId);
+                _logger.LogError(ex, "Queued historical sync failed. Exchange={Exchange}, SymbolId={SymbolId}", job.ExchangeCode, job.SymbolId);
             }
             finally
             {
