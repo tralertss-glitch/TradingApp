@@ -1,0 +1,91 @@
+TradingPro – Installationsvejledning
+
+Denne korte vejledning beskriver, hvordan TradingPro køres lokalt.
+
+Forudsætninger
+- .NET SDK
+- Node.js og npm
+- PostgreSQL and Timescaledb Extension
+- Git
+
+1. Database
+Kontroller, om appsettings.json findes. 
+Da appsettings.json ikke findes på GitHub, bedes du oprette den i controller-projektet. 
+Hele appsettings.json kan findes nederst i dette dokument.
+Kør derefter de eksisterende migrations:
+
+update-database
+
+Ved udvikling kan en ny migration oprettes med:
+
+Add-Migration InitialTradingAppDb
+update-database
+
+2. Backend
+Gendan pakker og start API'et:
+
+dotnet restore
+dotnet run
+
+3. Frontend
+Åbn en ny terminal:
+
+cd tradingappfrontend
+npm install
+npm run dev
+
+4. Test og kontrol
+
+dotnet test
+npm run build
+npm run lint
+
+Bemærk
+Passwords og API-nøgler skal konfigureres lokalt og må ikke gemmes i GitHub.
+
+appsettings.json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5433;Database=TradingAppDb2;Username=postgres;Password=123456"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "JwtSettings": {
+    "Secret": "SuperSecretKey_TradingApp_2026_123456",
+    "Issuer": "TradingApp",
+    "Audience": "TradingAppUser",
+    "ExpiryMinutes": 1440
+  },
+  "Gemini": {
+    "ApiKey": "AQ.Ab8RN6IyPH9CrKUTCCnVJ_bJQnjzJzvESEMyxotRI4oWjWbAiQ"
+  },
+  "DeepSeek": {
+    "ApiKey": "sk-ba9fba2dad1c40a680cfb16e9438a107"
+  },
+  "Groq": {
+    "ApiKey": "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"
+  },
+  "AllowedHosts": "*",
+  "EmailSettings": {
+    "Enabled": false,
+    "Host": "smtp.example.com",
+    "Port": 587,
+    "EnableSsl": true,
+    "Username": "",
+    "Password": "",
+    "FromEmail": "noreply@example.com",
+    "FromName": "TradingPro",
+    "FrontendBaseUrl": "http://localhost:5173",
+    "ResetTokenExpiryMinutes": 30
+  },
+  "Exchanges": {
+    "OKX": {
+      "RestBaseUrl": "https://www.okx.com",
+      "BusinessWebSocketUrl": "wss://ws.okx.com:8443/ws/v5/business"
+    }
+  }
+}
