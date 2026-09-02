@@ -21,8 +21,7 @@ public class ExchangesController : ControllerBase
     /// GET: api/exchanges
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ExchangeResponseDto>>> GetActiveExchanges(
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<ExchangeResponseDto>>> GetActiveExchanges(CancellationToken cancellationToken)
     {
         var exchanges = await _exchangeManagementService.GetActiveExchangesAsync(cancellationToken);
         return Ok(exchanges);
@@ -34,8 +33,7 @@ public class ExchangesController : ControllerBase
     /// </summary>
     [HttpGet("admin")]
     [Authorize(Roles = "Admin,SuperAdmin")]
-    public async Task<ActionResult<IEnumerable<ExchangeResponseDto>>> GetAllExchanges(
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<ExchangeResponseDto>>> GetAllExchanges(CancellationToken cancellationToken)
     {
         var exchanges = await _exchangeManagementService.GetAllExchangesAsync(cancellationToken);
         return Ok(exchanges);
@@ -47,19 +45,14 @@ public class ExchangesController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin,SuperAdmin")]
-    public async Task<ActionResult<ExchangeResponseDto>> CreateExchange(
-        [FromBody] CreateExchangeDto dto,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ExchangeResponseDto>> CreateExchange([FromBody] CreateExchangeDto dto, CancellationToken cancellationToken)
     {
         var result = await _exchangeManagementService.CreateExchangeAsync(dto, cancellationToken);
 
         if (!result.Success)
             return HandleError<ExchangeResponseDto>(result);
 
-        return CreatedAtAction(
-            nameof(GetAllExchanges),
-            new { id = result.Exchange!.Id },
-            result.Exchange);
+        return CreatedAtAction(nameof(GetAllExchanges), new { id = result.Exchange!.Id }, result.Exchange);
     }
 
     /// <summary>
@@ -68,10 +61,7 @@ public class ExchangesController : ControllerBase
     /// </summary>
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin,SuperAdmin")]
-    public async Task<ActionResult<ExchangeResponseDto>> UpdateExchange(
-        int id,
-        [FromBody] UpdateExchangeDto dto,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ExchangeResponseDto>> UpdateExchange(int id, [FromBody] UpdateExchangeDto dto, CancellationToken cancellationToken)
     {
         var result = await _exchangeManagementService.UpdateExchangeAsync(id, dto, cancellationToken);
 
