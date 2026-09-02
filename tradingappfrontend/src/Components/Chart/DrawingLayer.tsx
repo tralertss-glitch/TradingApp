@@ -1,24 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import type { IChartApi, Time } from 'lightweight-charts';
-import {
-    Eraser,
-    Minus,
-    MousePointer2,
-    Ruler,
-    Square,
-    Trash2,
-    TrendingUp,
-    Type,
-} from 'lucide-react';
+import type { IChartApi, ISeriesApi, Time } from 'lightweight-charts';
+import {Eraser, Minus, MousePointer2, Ruler, Square, Trash2, TrendingUp,Type} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { chartDrawingService } from '../../Services/chartDrawingService';
-import type {
-    ChartDrawingDto,
-    DrawingData,
-    DrawingPoint,
-    DrawingTool,
-    PersistedDrawingType,
-} from '../../Types/chartDrawing';
+import type {ChartDrawingDto, DrawingData, DrawingPoint, DrawingTool, PersistedDrawingType, DrawingStyle} from '../../Types/chartDrawing';
 
 interface DrawingLayerProps {
     symbolId: number;
@@ -26,14 +11,19 @@ interface DrawingLayerProps {
     isDark: boolean;
     isSelected: boolean;
     chart: IChartApi | null;
-    series: any;
+    series: ISeriesApi<'Candlestick'> | ISeriesApi<'Bar'> | ISeriesApi<'Line'> | ISeriesApi<'Area'> | null;
     renderVersion: number;
 }
 
 const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
 const DEFAULT_COLOR = '#2962ff';
 
-const isTwoPointData = (data: DrawingData): data is { points: [DrawingPoint, DrawingPoint]; style?: any } =>
+const isTwoPointData = (
+    data: DrawingData
+): data is {
+    points: [DrawingPoint, DrawingPoint];
+    style?: DrawingStyle;
+} =>
     'points' in data;
 
 export const DrawingLayer: React.FC<DrawingLayerProps> = ({
@@ -69,10 +59,16 @@ export const DrawingLayer: React.FC<DrawingLayerProps> = ({
     }, [symbolId, interval]);
 
     useEffect(() => {
-        setTool('cursor');
-        setDraftStart(null);
-        setDraftCurrent(null);
-        void loadDrawings();
+        const timeoutId = window.setTimeout(() => {
+            setTool('cursor');
+            setDraftStart(null);
+            setDraftCurrent(null);
+            void loadDrawings();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
     }, [loadDrawings]);
 
     const pointFromMouse = (event: React.MouseEvent<SVGSVGElement>): DrawingPoint | null => {
@@ -86,7 +82,7 @@ export const DrawingLayer: React.FC<DrawingLayerProps> = ({
         return { time: Number(time), price: Number(price) };
     };
 
-    const toCoordinates = (point: DrawingPoint): { x: number; y: number } | null => {
+    const toCoordinates = (point: DrawingPoint): { x: number; y: number; } | null => {
         if (!chart || !series) return null;
         const x = chart.timeScale().timeToCoordinate(point.time as Time);
         const y = series.priceToCoordinate(point.price);
@@ -267,7 +263,7 @@ export const DrawingLayer: React.FC<DrawingLayerProps> = ({
         }
         : null;
 
-    const tools: Array<{ id: DrawingTool; icon: React.ReactNode; label: string }> = [
+    const tools: Array<{ id: DrawingTool; icon: React.ReactNode; label: string; }> = [
         { id: 'cursor', icon: <MousePointer2 size={17} />, label: t('drawings.cursor') },
         { id: 'trendLine', icon: <TrendingUp size={17} />, label: t('drawings.trendLine') },
         { id: 'horizontalLine', icon: <Minus size={17} />, label: t('drawings.horizontalLine') },

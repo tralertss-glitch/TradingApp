@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { symbolApi } from '../../Services/symbolApi';
 import { aiApi } from '../../Services/aiApi';
@@ -14,7 +14,7 @@ import { AIAnalysisPanel } from '../AIAnalysisPanel';
 import { Watchlist } from '../Watchlist';
 import { ChartPane } from '../ChartPane';
 import { useTheme } from '../../Context/ThemeContext';
-import { Bell, Trash2, Power } from 'lucide-react';
+import { Bell, Power, Trash2 } from 'lucide-react';
 
 interface CandlestickChartProps {
     defaultSymbol?: string;
@@ -96,18 +96,40 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
     }, []);
 
     useEffect(() => {
-        if (activeSymbol || activeInterval) {
+        if (!activeSymbol && !activeInterval) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
             setPanes((prev) => ({
                 ...prev,
                 [selectedPaneId]: {
-                    symbolId: activeSymbolId || prev[selectedPaneId].symbolId,
-                    symbol: activeSymbol || prev[selectedPaneId].symbol,
-                    exchangeCode: activeExchangeCode || prev[selectedPaneId].exchangeCode,
-                    interval: activeInterval || prev[selectedPaneId].interval,
+                    symbolId:
+                        activeSymbolId ||
+                        prev[selectedPaneId].symbolId,
+                    symbol:
+                        activeSymbol ||
+                        prev[selectedPaneId].symbol,
+                    exchangeCode:
+                        activeExchangeCode ||
+                        prev[selectedPaneId].exchangeCode,
+                    interval:
+                        activeInterval ||
+                        prev[selectedPaneId].interval,
                 },
             }));
-        }
-    }, [activeSymbol, activeSymbolId, activeExchangeCode, activeInterval, selectedPaneId]);
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
+    }, [
+        activeSymbol,
+        activeSymbolId,
+        activeExchangeCode,
+        activeInterval,
+        selectedPaneId,
+    ]);
 
     // Behandler den relevante brugerhandling eller event.
     const handleSelectPane = (paneId: number) => {
@@ -158,10 +180,10 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
             <div className="flex-1 p-1.5 w-full h-full min-w-0 overflow-hidden">
                 <div
                     className={`w-full h-full gap-1.5 grid ${layoutMode === '1x1'
-                            ? 'grid-cols-1 grid-rows-1'
-                            : layoutMode === '1x2'
-                                ? 'grid-cols-2 grid-rows-1'
-                                : 'grid-cols-2 grid-rows-2'
+                        ? 'grid-cols-1 grid-rows-1'
+                        : layoutMode === '1x2'
+                            ? 'grid-cols-2 grid-rows-1'
+                            : 'grid-cols-2 grid-rows-2'
                         }`}
                 >
                     {visiblePaneIds.map((id) => {
@@ -272,24 +294,24 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
                                 <div
                                     key={alert.id}
                                     className={`p-2.5 rounded-lg border text-xs flex flex-col space-y-1.5 transition-all ${alert.isTriggered
-                                            ? 'bg-red-500/10 border-red-500/30 opacity-75'
-                                            : alert.isActive
-                                                ? isDark
-                                                    ? 'bg-[#1e222d] border-gray-700/60'
-                                                    : 'bg-gray-50 border-gray-200'
-                                                : isDark
-                                                    ? 'bg-[#131722] border-gray-800 opacity-60'
-                                                    : 'bg-gray-100 border-gray-200 opacity-60'
+                                        ? 'bg-red-500/10 border-red-500/30 opacity-75'
+                                        : alert.isActive
+                                            ? isDark
+                                                ? 'bg-[#1e222d] border-gray-700/60'
+                                                : 'bg-gray-50 border-gray-200'
+                                            : isDark
+                                                ? 'bg-[#131722] border-gray-800 opacity-60'
+                                                : 'bg-gray-100 border-gray-200 opacity-60'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-xs text-blue-400">{alert.symbol}</span>
                                         <span
                                             className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${alert.isTriggered
-                                                    ? 'bg-red-500/20 text-red-400'
-                                                    : alert.isActive
-                                                        ? 'bg-green-500/20 text-green-400'
-                                                        : 'bg-gray-500/20 text-gray-400'
+                                                ? 'bg-red-500/20 text-red-400'
+                                                : alert.isActive
+                                                    ? 'bg-green-500/20 text-green-400'
+                                                    : 'bg-gray-500/20 text-gray-400'
                                                 }`}
                                         >
                                             {alert.isTriggered
@@ -356,10 +378,10 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
                     type="button"
                     onClick={() => setActivePanel(activePanel === 'watchlist' ? null : 'watchlist')}
                     className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${activePanel === 'watchlist'
-                            ? 'bg-blue-600 text-white shadow-md'
-                            : isDark
-                                ? 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                                : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : isDark
+                            ? 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                            : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
                         }`}
                     title={t('header.watchlist', 'İzleme Listesi')}
                 >
@@ -377,10 +399,10 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
                         if (willOpen) fetchAiAnalysis(currentActivePane.symbolId, currentActivePane.interval);
                     }}
                     className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${activePanel === 'ai'
-                            ? 'bg-purple-600 text-white shadow-md'
-                            : isDark
-                                ? 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                                : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+                        ? 'bg-purple-600 text-white shadow-md'
+                        : isDark
+                            ? 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                            : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
                         }`}
                     title={t('header.aiAssistant', 'Yapay Zeka Asistanı')}
                 >
@@ -392,10 +414,10 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
                     type="button"
                     onClick={() => setActivePanel(activePanel === 'alerts' ? null : 'alerts')}
                     className={`relative w-8 h-8 rounded-lg flex items-center justify-center transition-all ${activePanel === 'alerts'
-                            ? 'bg-amber-600 text-white shadow-md'
-                            : isDark
-                                ? 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                                : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+                        ? 'bg-amber-600 text-white shadow-md'
+                        : isDark
+                            ? 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                            : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
                         }`}
                     title={t('header.alerts', 'Alarmlar')}
                 >

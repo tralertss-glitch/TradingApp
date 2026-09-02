@@ -1,18 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {
-    User,
-    X,
-    Lock,
-    CheckCircle,
-    AlertCircle,
-    KeyRound,
-    Save,
-    Loader2,
-    Trash2,
-    AlertTriangle
-} from 'lucide-react';
+import {AlertCircle, AlertTriangle, CheckCircle, KeyRound, Loader2, Lock, Save, Trash2, User, X} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { userService, type UserManagementDto } from '../Services/userService';
+import { getApiErrorMessage } from '../Utils/errorUtils';
 
 export interface UserProfileDto {
     id?: string | number;
@@ -68,7 +58,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     const [deleteLoading, setDeleteLoading] = useState(false);
 
     useEffect(() => {
-        if (isOpen) {
+        if (!isOpen) {
+            return;
+        }
+
+        let cancelled = false;
+
+        const timeoutId = window.setTimeout(() => {
             setFetchingProfile(true);
             setProfileError(null);
             setProfileSuccess(null);
@@ -76,9 +72,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             setPwdSuccess(null);
             setIsDeleteConfirmOpen(false);
 
-            userService
+            void userService
                 .getMyProfile()
                 .then((data) => {
+                    if (cancelled) {
+                        return;
+                    }
+
                     setProfileData(data);
                     setProfileFormular({
                         firstName: data.firstName || '',
@@ -87,22 +87,33 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     });
                 })
                 .catch(() => {
-                    if (currentUser) {
-                        setProfileFormular({
-                            firstName: currentUser.firstName || '',
-                            lastName: currentUser.lastName || '',
-                            email: currentUser.email || '',
-                        });
+                    if (cancelled || !currentUser) {
+                        return;
                     }
+
+                    setProfileFormular({
+                        firstName: currentUser.firstName || '',
+                        lastName: currentUser.lastName || '',
+                        email: currentUser.email || '',
+                    });
                 })
-                .finally(() => setFetchingProfile(false));
-        }
+                .finally(() => {
+                    if (!cancelled) {
+                        setFetchingProfile(false);
+                    }
+                });
+        }, 0);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timeoutId);
+        };
     }, [isOpen, currentUser]);
 
     if (!isOpen) return null;
 
     // Opdaterer de aktuelle data i brugergrænsefladen.
-    const handleProfileUpdateSubmit = async (e: React.FormularEvent) => {
+    const handleProfileUpdateSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setProfileError(null);
         setProfileSuccess(null);
@@ -115,15 +126,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             if (onProfileUpdated) {
                 onProfileUpdated(updated);
             }
-        } catch (err: any) {
-            setProfileError(err.response?.data?.message || 'Profil güncellenirken bir hata oluştu.');
+        } catch (err: unknown) {
+            setProfileError(getApiErrorMessage(err, 'Profil güncellenirken bir hata oluştu.'));
         } finally {
             setProfileLoading(false);
         }
     };
 
     // Behandler den relevante brugerhandling eller event.
-    const handlePasswordChangeSubmit = async (e: React.FormularEvent) => {
+    const handlePasswordChangeSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setPwdError(null);
         setPwdSuccess(null);
@@ -145,8 +156,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
-        } catch (err: any) {
-            setPwdError(err.response?.data?.message || 'Mevcut şifreniz hatalı veya geçersiz.');
+        } catch (err: unknown) {
+            setPwdError(getApiErrorMessage(err, 'Mevcut şifreniz hatalı veya geçersiz.'));
         } finally {
             setPwdLoading(false);
         }
@@ -160,8 +171,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             setIsDeleteConfirmOpen(false);
             onClose();
             onLogout();
-        } catch (err: any) {
-            alert(err.response?.data?.message || 'Hesap silinirken bir hata oluştu.');
+        } catch (err: unknown) {
+            alert(getApiErrorMessage(err, 'Hesap silinirken bir hata oluştu.'));
         } finally {
             setDeleteLoading(false);
         }
@@ -202,8 +213,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                         type="button"
                         onClick={() => { setProfileTab('info'); setProfileError(null); setProfileSuccess(null); }}
                         className={`flex-1 py-2.5 text-center transition-colors border-b-2 flex items-center justify-center space-x-1.5 ${profileTab === 'info'
-                                ? 'border-blue-500 text-blue-500 bg-blue-500/5'
-                                : 'border-transparent text-gray-400 hover:text-gray-200'
+                            ? 'border-blue-500 text-blue-500 bg-blue-500/5'
+                            : 'border-transparent text-gray-400 hover:text-gray-200'
                             }`}
                     >
                         <User className="w-3.5 h-3.5" />
@@ -213,8 +224,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                         type="button"
                         onClick={() => { setProfileTab('password'); setPwdError(null); setPwdSuccess(null); }}
                         className={`flex-1 py-2.5 text-center transition-colors border-b-2 flex items-center justify-center space-x-1.5 ${profileTab === 'password'
-                                ? 'border-blue-500 text-blue-500 bg-blue-500/5'
-                                : 'border-transparent text-gray-400 hover:text-gray-200'
+                            ? 'border-blue-500 text-blue-500 bg-blue-500/5'
+                            : 'border-transparent text-gray-400 hover:text-gray-200'
                             }`}
                     >
                         <KeyRound className="w-3.5 h-3.5" />
@@ -278,8 +289,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                                             disabled
                                             value={`@${displayUsername}`}
                                             className={`w-full p-2.5 rounded-lg border outline-none cursor-not-allowed font-medium ${isDark
-                                                    ? 'bg-[#151921] border-gray-800 text-gray-400'
-                                                    : 'bg-gray-100 border-gray-300 text-gray-500'
+                                                ? 'bg-[#151921] border-gray-800 text-gray-400'
+                                                : 'bg-gray-100 border-gray-300 text-gray-500'
                                                 }`}
                                         />
                                     </div>

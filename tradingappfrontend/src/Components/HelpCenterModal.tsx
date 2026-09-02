@@ -26,7 +26,7 @@ export const HelpCenterModal: React.FC<HelpCenterModalProps> = ({
     if (!isOpen) return null;
 
     // Behandler den relevante brugerhandling eller event.
-    const handleSubmit = (e: React.FormularEvent) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setSent(true);
         setTimeout(() => {
@@ -72,8 +72,8 @@ export const HelpCenterModal: React.FC<HelpCenterModalProps> = ({
                         type="button"
                         onClick={() => setActiveTab('faq')}
                         className={`flex-1 py-2.5 text-center transition-colors border-b-2 ${activeTab === 'faq'
-                                ? 'border-blue-500 text-blue-500 bg-blue-500/5'
-                                : 'border-transparent text-gray-400 hover:text-gray-200'
+                            ? 'border-blue-500 text-blue-500 bg-blue-500/5'
+                            : 'border-transparent text-gray-400 hover:text-gray-200'
                             }`}
                     >
                         {t('helpCenter.faqTab', 'Sıkça Sorulan Sorular')}
@@ -82,8 +82,8 @@ export const HelpCenterModal: React.FC<HelpCenterModalProps> = ({
                         type="button"
                         onClick={() => setActiveTab('contact')}
                         className={`flex-1 py-2.5 text-center transition-colors border-b-2 ${activeTab === 'contact'
-                                ? 'border-blue-500 text-blue-500 bg-blue-500/5'
-                                : 'border-transparent text-gray-400 hover:text-gray-200'
+                            ? 'border-blue-500 text-blue-500 bg-blue-500/5'
+                            : 'border-transparent text-gray-400 hover:text-gray-200'
                             }`}
                     >
                         {t('helpCenter.contactTab', 'Bize Ulaşın')}

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, RotateCcw, CandlestickChart as CandleIcon, Grid, Sliders, Bell } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {Bell, CandlestickChart as CandleIcon, Grid, RotateCcw, Sliders, X} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_CHART_SETTINGS, type ChartVisualSettings } from '../Types/chartSettings';
 
@@ -28,12 +28,20 @@ export const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
     }));
 
     useEffect(() => {
-        if (settings) {
+        if (!isOpen) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
             setFormularData({
                 ...DEFAULT_CHART_SETTINGS,
                 ...settings,
             });
-        }
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
     }, [settings, isOpen]);
 
     if (!isOpen) return null;
@@ -53,9 +61,8 @@ export const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
         setFormularData({ ...DEFAULT_CHART_SETTINGS });
     };
 
-    // Behandler den relevante brugerhandling eller event.
-    const handleSubmit = (e: React.FormularEvent) => {
-        e.preventDefault();
+    // Gemmer indstillingerne og lukker modalvinduet.
+    const handleSubmit = () => {
         onSave(formData);
         onClose();
     };
@@ -70,8 +77,8 @@ export const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
             <div
                 onClick={(e) => e.stopPropagation()}
                 className={`w-full max-w-2xl h-[460px] rounded-xl shadow-2xl border flex flex-col overflow-hidden transition-colors ${isDark
-                        ? 'bg-[#131722] border-[#2a2e39] text-gray-200'
-                        : 'bg-white border-gray-200 text-gray-800'
+                    ? 'bg-[#131722] border-[#2a2e39] text-gray-200'
+                    : 'bg-white border-gray-200 text-gray-800'
                     }`}
             >
                 {/* Sidehoved */}
@@ -104,8 +111,8 @@ export const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
                             type="button"
                             onClick={() => setActiveTab('symbol')}
                             className={`flex items-center space-x-2.5 w-full px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'symbol'
-                                    ? 'bg-[#2962ff] text-white shadow-sm'
-                                    : 'text-gray-400 hover:bg-gray-500/10 hover:text-gray-200'
+                                ? 'bg-[#2962ff] text-white shadow-sm'
+                                : 'text-gray-400 hover:bg-gray-500/10 hover:text-gray-200'
                                 }`}
                         >
                             <CandleIcon className="w-4 h-4" />
@@ -116,8 +123,8 @@ export const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
                             type="button"
                             onClick={() => setActiveTab('grid')}
                             className={`flex items-center space-x-2.5 w-full px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'grid'
-                                    ? 'bg-[#2962ff] text-white shadow-sm'
-                                    : 'text-gray-400 hover:bg-gray-500/10 hover:text-gray-200'
+                                ? 'bg-[#2962ff] text-white shadow-sm'
+                                : 'text-gray-400 hover:bg-gray-500/10 hover:text-gray-200'
                                 }`}
                         >
                             <Grid className="w-4 h-4" />
@@ -128,8 +135,8 @@ export const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
                             type="button"
                             onClick={() => setActiveTab('priceLine')}
                             className={`flex items-center space-x-2.5 w-full px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'priceLine'
-                                    ? 'bg-[#2962ff] text-white shadow-sm'
-                                    : 'text-gray-400 hover:bg-gray-500/10 hover:text-gray-200'
+                                ? 'bg-[#2962ff] text-white shadow-sm'
+                                : 'text-gray-400 hover:bg-gray-500/10 hover:text-gray-200'
                                 }`}
                         >
                             <Sliders className="w-4 h-4" />
@@ -140,8 +147,8 @@ export const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
                             type="button"
                             onClick={() => setActiveTab('sound')}
                             className={`flex items-center space-x-2.5 w-full px-3 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab === 'sound'
-                                    ? 'bg-[#2962ff] text-white shadow-sm'
-                                    : 'text-gray-400 hover:bg-gray-500/10 hover:text-gray-200'
+                                ? 'bg-[#2962ff] text-white shadow-sm'
+                                : 'text-gray-400 hover:bg-gray-500/10 hover:text-gray-200'
                                 }`}
                         >
                             <Bell className="w-4 h-4" />

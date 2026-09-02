@@ -1,31 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-    Users,
-    ShieldCheck,
-    ArrowLeft,
-    Search,
-    UserCheck,
-    CheckCircle2,
-    AlertCircle,
-    Loader2,
-    Coins,
-    Plus,
-    RefreshCw,
-    LogOut,
-    Trash2,
-    X,
-    Mail,
-    User as UserIcon,
-    Lock,
-    UserMinus,
-    UserPlus,
-    Activity,
-    KeyRound,
-    Save,
-    Globe,
-    Check
-} from 'lucide-react';
+import {Users, ShieldCheck, ArrowLeft, Search, UserCheck, CheckCircle2, AlertCircle, Loader2, Coins, Plus, RefreshCw, LogOut, Trash2, X, Mail, User as UserIcon, Lock, UserMinus, UserPlus, Activity, KeyRound, Save, Globe, Check} from 'lucide-react';
 import { api } from '../Services/api';
 import { userService, type UserManagementDto } from '../Services/userService';
 import { authService } from '../Services/authService';
@@ -34,6 +9,7 @@ import { systemHealthService } from '../Services/systemHealthService';
 import { exchangeApi } from '../Services/exchangeApi';
 import type { ExchangeResponseDto, SymbolResponseDto } from '../Types/symbol';
 import type { SystemHealthDto } from '../Types/systemHealth';
+import { getApiErrorMessage } from '../Utils/errorUtils';
 
 interface AdminPanelProps {
     onSwitchToTerminal: () => void;
@@ -66,7 +42,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
     const [health, setHealth] = useState<SystemHealthDto | null>(null);
     const [loadingHealth, setLoadingHealth] = useState(true);
 
-    const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+    const [message, setMessage] = useState<{ text: string; type: 'success' | 'error'; } | null>(null);
 
     // Tilstand for modal til ny admin
     const [isAddAdminOpen, setIsAddAdminOpen] = useState(false);
@@ -140,9 +116,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
         try {
             const data = await userService.getAllUsers();
             setUsers(Array.isArray(data) ? data : []);
-        } catch (err: any) {
-            const errMsg = err.response?.data?.message || t('admin.fetchUsersError');
-            setMessage({ text: errMsg, type: 'error' });
+        } catch (err: unknown) {
+            setMessage({ text: getApiErrorMessage(err, t('admin.fetchUsersError')), type: 'error' });
         } finally {
             setLoadingUsers(false);
         }
@@ -153,12 +128,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
         setLoadingHealth(true);
         try {
             setHealth(await systemHealthService.getHealth());
-        } catch (err: any) {
-            setMessage({ text: err.response?.data?.message || t('admin.healthFetchError'), type: 'error' });
+        } catch (err: unknown) {
+            setMessage({ text: getApiErrorMessage(err, t('admin.healthFetchError')), type: 'error' });
         } finally {
             setLoadingHealth(false);
         }
-    }, []);
+    }, [t]);
 
     // 3. Hent symboler
     const fetchSymbols = useCallback(async () => {
@@ -186,11 +161,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
     }, [fetchUsers, fetchSymbols, fetchMyProfile, fetchHealth]);
 
     useEffect(() => {
-        refreshAll();
+        const timeoutId = window.setTimeout(() => {
+            refreshAll();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
     }, [refreshAll]);
 
     // Rollefortolker
-    const getUserRoleString = (role: any): string => {
+    const getUserRoleString = (role: unknown): string => {
         if (role === 0 || role === '0' || String(role).toLowerCase() === 'user') return 'user';
         if (role === 1 || role === '1' || String(role).toLowerCase() === 'admin') return 'admin';
         if (role === 2 || role === '2' || String(role).toLowerCase() === 'superadmin') return 'superadmin';
@@ -201,15 +182,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
     const isSelfUser = useCallback((user: UserManagementDto) => {
         if (!currentUser && !profileFormular.username && !profileFormular.email) return false;
 
-        const currentId = (currentUser as any)?.id;
         const currentUsername = (profileFormular.username || currentUser?.username || '').trim().toLowerCase();
         const currentEmail = (profileFormular.email || currentUser?.email || '').trim().toLowerCase();
 
-        const targetId = user.id;
         const targetUsername = (user.username || '').trim().toLowerCase();
         const targetEmail = (user.email || '').trim().toLowerCase();
 
-        if (currentId && targetId && currentId === targetId) return true;
         if (currentUsername && targetUsername && currentUsername === targetUsername) return true;
         if (currentEmail && targetEmail && currentEmail === targetEmail) return true;
 
@@ -235,8 +213,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
                 type: 'success'
             });
             fetchUsers();
-        } catch (err: any) {
-            setMessage({ text: err.response?.data?.message || t('admin.roleUpdateError'), type: 'error' });
+        } catch (err: unknown) {
+            setMessage({ text: getApiErrorMessage(err, t('admin.roleUpdateError')), type: 'error' });
         }
     };
 
@@ -249,13 +227,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
             const res = await userService.hardDeleteUser(userId);
             setMessage({ text: res.message || t('admin.userDeleted', { username }), type: 'success' });
             fetchUsers();
-        } catch (err: any) {
-            setMessage({ text: err.response?.data?.message || t('admin.userDeleteError'), type: 'error' });
+        } catch (err: unknown) {
+            setMessage({ text: getApiErrorMessage(err, t('admin.userDeleteError')), type: 'error' });
         }
     };
 
     // Opret ny admin
-    const handleCreateAdminSubmit = async (e: React.FormularEvent) => {
+    const handleCreateAdminSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setAdminModalError(null);
         setCreatingAdmin(true);
@@ -288,26 +266,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
             setAdminFormular({ firstName: '', lastName: '', username: '', email: '', password: '' });
             await fetchUsers();
             setActiveTab('admins');
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Admin oluşturma hatası:', err);
-            const backendMsg = err.response?.data?.message;
-            const validationErrors = err.response?.data?.errors;
-
-            if (backendMsg) {
-                setAdminModalError(backendMsg);
-            } else if (validationErrors && typeof validationErrors === 'object') {
-                const firstError = Object.values(validationErrors).flat()[0] as string;
-                setAdminModalError(firstError || t('admin.checkFormularError'));
-            } else {
-                setAdminModalError(t('admin.adminCreateError'));
-            }
+            setAdminModalError(
+                getApiErrorMessage(err, t('admin.adminCreateError'))
+            );
         } finally {
             setCreatingAdmin(false);
         }
     };
 
     // Opret exchange
-    const handleCreateExchange = async (e: React.FormularEvent) => {
+    const handleCreateExchange = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const code = exchangeFormular.code.trim().toUpperCase();
         const name = exchangeFormular.name.trim();
@@ -319,15 +289,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
             setExchangeFormular({ code: '', name: '', isActive: true });
             setMessage({ text: t('admin.exchangeCreated', { exchange: code }), type: 'success' });
             await fetchSymbols();
-        } catch (err: any) {
-            setMessage({ text: err.response?.data?.message || t('admin.exchangeSaveError'), type: 'error' });
+        } catch (err: unknown) {
+            setMessage({ text: getApiErrorMessage(err, t('admin.exchangeSaveError')), type: 'error' });
         } finally {
             setSavingExchange(false);
         }
     };
 
     // Opdater exchange
-    const handleUpdateExchange = async (e: React.FormularEvent) => {
+    const handleUpdateExchange = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!editingExchange) return;
 
@@ -341,8 +311,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
             setEditingExchange(null);
             setMessage({ text: t('admin.exchangeUpdated', { exchange: updated.code }), type: 'success' });
             await fetchSymbols();
-        } catch (err: any) {
-            setMessage({ text: err.response?.data?.message || t('admin.exchangeSaveError'), type: 'error' });
+        } catch (err: unknown) {
+            setMessage({ text: getApiErrorMessage(err, t('admin.exchangeSaveError')), type: 'error' });
         } finally {
             setSavingExchange(false);
         }
@@ -356,13 +326,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
             await exchangeApi.deleteExchange(exchange.id);
             setMessage({ text: t('admin.exchangeDeleted', { exchange: exchange.code }), type: 'success' });
             await fetchSymbols();
-        } catch (err: any) {
-            setMessage({ text: err.response?.data?.message || t('admin.exchangeDeleteError'), type: 'error' });
+        } catch (err: unknown) {
+            setMessage({ text: getApiErrorMessage(err, t('admin.exchangeDeleteError')), type: 'error' });
         }
     };
 
     // Opdater profiloplysninger
-    const handleProfileSubmit = async (e: React.FormularEvent) => {
+    const handleProfileSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setSavingProfile(true);
         try {
@@ -377,20 +347,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
             const updatedUser = { ...currentUser, ...updated };
             localStorage.setItem('user', JSON.stringify(updatedUser));
             fetchUsers();
-        } catch (err: any) {
-            const backendErrors = err.response?.data?.errors;
-            let errorText = err.response?.data?.message;
-            if (backendErrors && typeof backendErrors === 'object') {
-                errorText = Object.values(backendErrors).flat().join(' ');
-            }
-            setMessage({ text: errorText || t('admin.profileUpdateError'), type: 'error' });
+        } catch (err: unknown) {
+            setMessage({
+                text: getApiErrorMessage(err, t('admin.profileUpdateError')),
+                type: 'error',
+            });
         } finally {
             setSavingProfile(false);
         }
     };
 
     // Opdater adgangskode
-    const handlePasswordSubmit = async (e: React.FormularEvent) => {
+    const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (passwordFormular.newPassword !== passwordFormular.confirmPassword) {
             setMessage({ text: t('admin.passwordMismatch'), type: 'error' });
@@ -404,8 +372,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
             });
             setMessage({ text: res.message || t('admin.passwordChanged'), type: 'success' });
             setPasswordFormular({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        } catch (err: any) {
-            setMessage({ text: err.response?.data?.message || t('admin.passwordChangeError'), type: 'error' });
+        } catch (err: unknown) {
+            setMessage({ text: getApiErrorMessage(err, t('admin.passwordChangeError')), type: 'error' });
         } finally {
             setSavingPassword(false);
         }
@@ -445,8 +413,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onSwitchToTerminal, onLo
             const result = await symbolApi.syncExchange(exchangeCode);
             setMessage({ text: result.message || t('admin.syncSuccess', { exchange: exchangeCode }), type: 'success' });
             await fetchSymbols();
-        } catch (err: any) {
-            setMessage({ text: err.response?.data?.message || t('admin.syncError', { exchange: exchangeCode }), type: 'error' });
+        } catch (err: unknown) {
+            setMessage({ text: getApiErrorMessage(err, t('admin.syncError', { exchange: exchangeCode })), type: 'error' });
         } finally {
             setSyncingExchangeCode(null);
         }

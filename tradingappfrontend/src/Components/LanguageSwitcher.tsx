@@ -1,18 +1,19 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { preferenceService } from '../Services/preferenceService';
+import type { Language } from '../Types/preferences';
 
 export const LanguageSwitcher: React.FC = () => {
     const { i18n } = useTranslation();
 
     // Behandler den relevante brugerhandling eller event.
     const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const lang = e.target.value;
+        const lang = e.target.value as Language;
         i18n.changeLanguage(lang);
         localStorage.setItem('tradingpro_lang', lang);
 
         // Gem indstillingen i databasen.
-        preferenceService.savePreferences({ Language: lang } as any).catch(() => { });
+        preferenceService.updatePreferences({ language: lang }).catch(() => { });
     };
 
     return (

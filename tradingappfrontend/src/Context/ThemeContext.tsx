@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { preferenceService } from '../Services/preferenceService';
 import { authService } from '../Services/authService';
@@ -13,7 +14,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ThemeProvider: React.FC<{ children: React.ReactNode; }> = ({ children }) => {
     // Hent temaet fra localStorage ved første åbning; brug ellers dark som standard.
     const [theme, setThemeState] = useState<Theme>(() => {
         const savedTheme = localStorage.getItem('tradingpro_theme') as Theme;
@@ -38,10 +39,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (saveToDb && authService.isAuthenticated()) {
             preferenceService
-                .savePreferences({
-                    Theme: newTheme,
-                    theme: newTheme,
-                } as any)
+                .updatePreferences({ theme: newTheme })
                 .catch(() => { });
         }
     }, []);
@@ -55,10 +53,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             // Gem straks i databasen, når brugeren trykker på knappen.
             if (authService.isAuthenticated()) {
                 preferenceService
-                    .savePreferences({
-                        Theme: next,
-                        theme: next,
-                    } as any)
+                    .updatePreferences({ theme: next })
                     .catch(() => { });
             }
             return next;

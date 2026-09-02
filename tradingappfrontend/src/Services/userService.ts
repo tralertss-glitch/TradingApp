@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { UserPreferences } from '../Types/preferences';
 
 export interface UserManagementDto {
     id: number;
@@ -16,14 +17,6 @@ export interface ChangePasswordDto {
     newPassword: string;
 }
 
-export interface UserPreferencesDto {
-    theme?: string;
-    language?: string;
-    selectedLayout?: string;
-    activeIndicatorsJson?: string;
-    chartSettingsJson?: string;
-}
-
 export const userService = {
     getMyProfile: async (): Promise<UserManagementDto> => {
         const response = await api.get<UserManagementDto>('/users/me');
@@ -35,30 +28,30 @@ export const userService = {
         return response.data;
     },
 
-    changePassword: async (dto: ChangePasswordDto): Promise<{ message: string }> => {
-        const response = await api.post<{ message: string }>('/users/change-password', dto);
+    changePassword: async (dto: ChangePasswordDto): Promise<{ message: string; }> => {
+        const response = await api.post<{ message: string; }>('/users/change-password', dto);
         return response.data;
     },
 
     // 🛑 Slet brugerkonto (soft delete)
-    deleteMyAccount: async (): Promise<{ message: string }> => {
-        const response = await api.delete<{ message: string }>('/users/me');
+    deleteMyAccount: async (): Promise<{ message: string; }> => {
+        const response = await api.delete<{ message: string; }>('/users/me');
         return response.data;
     },
 
     // 🔥 Admin/SuperAdmin sletter en konto permanent fra databasen (hard delete)
-    hardDeleteUser: async (userId: number): Promise<{ message: string }> => {
-        const response = await api.delete<{ message: string }>(`/users/${userId}`);
+    hardDeleteUser: async (userId: number): Promise<{ message: string; }> => {
+        const response = await api.delete<{ message: string; }>(`/users/${userId}`);
         return response.data;
     },
 
-    getPreferences: async (): Promise<UserPreferencesDto> => {
-        const response = await api.get<UserPreferencesDto>('/users/preferences');
+    getPreferences: async (): Promise<UserPreferences> => {
+        const response = await api.get<UserPreferences>('/users/preferences');
         return response.data;
     },
 
-    savePreferences: async (dto: UserPreferencesDto): Promise<{ message: string }> => {
-        const response = await api.put<{ message: string }>('/users/preferences', dto);
+    savePreferences: async (dto: UserPreferences): Promise<{ message: string; }> => {
+        const response = await api.put<{ message: string; }>('/users/preferences', dto);
         return response.data;
     },
 
@@ -67,8 +60,8 @@ export const userService = {
         return response.data;
     },
 
-    assignRole: async (dto: UserManagementDto): Promise<{ message: string }> => {
-        const response = await api.put<{ message: string }>('/users/assign-role', dto);
+    assignRole: async (dto: UserManagementDto): Promise<{ message: string; }> => {
+        const response = await api.put<{ message: string; }>('/users/assign-role', dto);
         return response.data;
     },
 };

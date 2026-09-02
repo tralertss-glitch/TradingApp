@@ -43,8 +43,8 @@ export const IndicatorsModal: React.FC<IndicatorsModalProps> = ({
             <div
                 onClick={(e) => e.stopPropagation()}
                 className={`w-full max-w-md rounded-xl shadow-2xl border flex flex-col overflow-hidden transition-colors ${isDark
-                        ? 'bg-[#1e222d] border-[#2a2e39] text-gray-200'
-                        : 'bg-white border-gray-200 text-gray-800'
+                    ? 'bg-[#1e222d] border-[#2a2e39] text-gray-200'
+                    : 'bg-white border-gray-200 text-gray-800'
                     }`}
             >
                 {/* Modal-header */}
@@ -86,10 +86,10 @@ export const IndicatorsModal: React.FC<IndicatorsModalProps> = ({
                                     }
                                 }}
                                 className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer select-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#2962ff] ${ind.enabled
-                                        ? isDark
-                                            ? 'bg-blue-600/15'
-                                            : 'bg-blue-50'
-                                        : 'hover:bg-gray-500/10'
+                                    ? isDark
+                                        ? 'bg-blue-600/15'
+                                        : 'bg-blue-50'
+                                    : 'hover:bg-gray-500/10'
                                     }`}
                             >
                                 <div className="flex items-center space-x-3">
@@ -107,10 +107,10 @@ export const IndicatorsModal: React.FC<IndicatorsModalProps> = ({
 
                                 <div
                                     className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${ind.enabled
-                                            ? 'bg-[#2962ff] border-[#2962ff] text-white'
-                                            : isDark
-                                                ? 'border-gray-700 bg-gray-800'
-                                                : 'border-gray-300 bg-white'
+                                        ? 'bg-[#2962ff] border-[#2962ff] text-white'
+                                        : isDark
+                                            ? 'border-gray-700 bg-gray-800'
+                                            : 'border-gray-300 bg-white'
                                         }`}
                                 >
                                     {ind.enabled && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -123,8 +123,8 @@ export const IndicatorsModal: React.FC<IndicatorsModalProps> = ({
                 {/* Modal-footer */}
                 <div
                     className={`px-4 py-2.5 border-t flex justify-end ${isDark
-                            ? 'border-[#2a2e39] bg-[#131722]'
-                            : 'border-gray-100 bg-gray-50'
+                        ? 'border-[#2a2e39] bg-[#131722]'
+                        : 'border-gray-100 bg-gray-50'
                         }`}
                 >
                     <button

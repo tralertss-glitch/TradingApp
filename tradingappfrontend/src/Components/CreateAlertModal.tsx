@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Bell } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Bell, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { AlertCondition, CreateAlertRequest } from '../Types/alert';
 
@@ -29,14 +29,24 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     useEffect(() => {
-        if (isOpen) {
+        if (!isOpen) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
             setTargetPrice(currentPrice > 0 ? currentPrice.toString() : '');
             setNote('');
             setCondition('CROSSES_UP');
-        }
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
     }, [isOpen, currentPrice, symbol]);
 
-    if (!isOpen) return null;
+    if (!isOpen) {
+        return null;
+    }
 
     // Behandler den relevante brugerhandling eller event.
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -44,7 +54,7 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
 
         const numericPrice = parseFloat(targetPrice);
 
-        if (Number.isNaN(numericPrice) || numericPrice <= 0) {
+        if (isNaN(numericPrice) || numericPrice <= 0) {
             return;
         }
 
@@ -55,12 +65,12 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
                 symbolId,
                 targetPrice: numericPrice,
                 condition,
-                note: note.trim() || undefined,
+                note: note.trim() ? note.trim() : undefined,
             });
 
             onClose();
-        } catch (error: unknown) {
-            console.error('[CreateAlertModal] Alarm oluşturulamadı:', error);
+        } catch (err: unknown) {
+            console.error('Alarm oluşturulamadı:', err);
         } finally {
             setIsSubmitting(false);
         }
@@ -82,7 +92,9 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
             >
                 {/* Sidehoved */}
                 <div
-                    className={`flex items-center justify-between px-5 py-3.5 border-b ${isDark ? 'border-[#2a2e39] bg-[#131722]' : 'border-gray-100 bg-gray-50'
+                    className={`flex items-center justify-between px-5 py-3.5 border-b ${isDark
+                            ? 'border-[#2a2e39] bg-[#131722]'
+                            : 'border-gray-100 bg-gray-50'
                         }`}
                 >
                     <div className="flex items-center space-x-2 font-bold text-sm">
@@ -91,6 +103,7 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
                             {t('alerts.createTitle', 'Alarm Kur')} ({symbol})
                         </span>
                     </div>
+
                     <button
                         type="button"
                         onClick={onClose}
@@ -107,6 +120,7 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
                         <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
                             {t('alerts.targetPrice', 'Hedef Fiyat ($)')}
                         </label>
+
                         <input
                             type="number"
                             step="any"
@@ -119,10 +133,13 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
                                     : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
                                 }`}
                         />
+
                         {currentPrice > 0 && (
                             <span className="text-[11px] text-gray-500 mt-1 block">
                                 {t('alerts.currentPrice', 'Anlık Fiyat')}:{' '}
-                                <strong className="font-mono">${currentPrice}</strong>
+                                <strong className="font-mono">
+                                    ${currentPrice}
+                                </strong>
                             </span>
                         )}
                     </div>
@@ -131,19 +148,31 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
                         <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
                             {t('alerts.condition', 'Koşul')}
                         </label>
+
                         <select
                             value={condition}
-                            onChange={(e) => setCondition(e.target.value as AlertCondition)}
+                            onChange={(e) =>
+                                setCondition(
+                                    e.target.value as AlertCondition
+                                )
+                            }
                             className={`w-full text-xs p-2.5 rounded-lg border outline-none transition-colors ${isDark
                                     ? 'bg-[#131722] border-gray-700 text-white focus:border-blue-500'
                                     : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
                                 }`}
                         >
                             <option value="CROSSES_UP">
-                                {t('alerts.crossesUp', '▲ Yukarı Kestiğinde (Fiyat >= Hedef)')}
+                                {t(
+                                    'alerts.crossesUp',
+                                    '▲ Yukarı Kestiğinde (Fiyat >= Hedef)'
+                                )}
                             </option>
+
                             <option value="CROSSES_DOWN">
-                                {t('alerts.crossesDown', '▼ Aşağı Kestiğinde (Fiyat <= Hedef)')}
+                                {t(
+                                    'alerts.crossesDown',
+                                    '▼ Aşağı Kestiğinde (Fiyat <= Hedef)'
+                                )}
                             </option>
                         </select>
                     </div>
@@ -152,9 +181,13 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
                         <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
                             {t('alerts.note', 'Not (Opsiyonel)')}
                         </label>
+
                         <input
                             type="text"
-                            placeholder={t('alerts.notePlaceholder', 'Örn: Destek kırılırsa sat')}
+                            placeholder={t(
+                                'alerts.notePlaceholder',
+                                'Örn: Destek kırılırsa sat'
+                            )}
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                             maxLength={255}
@@ -167,7 +200,9 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
 
                     {/* Footer-knapper */}
                     <div
-                        className={`flex justify-end space-x-2.5 pt-3 border-t ${isDark ? 'border-[#2a2e39]' : 'border-gray-100'
+                        className={`flex justify-end space-x-2.5 pt-3 border-t ${isDark
+                                ? 'border-[#2a2e39]'
+                                : 'border-gray-100'
                             }`}
                     >
                         <button
@@ -177,6 +212,7 @@ export const CreateAlertModal: React.FC<CreateAlertModalProps> = ({
                         >
                             {t('chartSettings.cancel', 'İptal')}
                         </button>
+
                         <button
                             type="submit"
                             disabled={isSubmitting}

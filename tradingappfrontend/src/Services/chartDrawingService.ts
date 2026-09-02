@@ -29,7 +29,7 @@ export const chartDrawingService = {
     },
 
     clearDrawings: async (symbolId: number, interval: string): Promise<number> => {
-        const response = await api.delete<{ deletedCount: number }>('/chart-drawings', {
+        const response = await api.delete<{ deletedCount: number; }>('/chart-drawings', {
             params: { symbolId, interval },
         });
         return response.data.deletedCount;

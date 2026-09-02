@@ -1,441 +1,103 @@
-import {
-    useState,
-    useEffect,
-    useCallback,
-    useRef,
-} from 'react';
-
-import type {
-    Alert,
-    CreateAlertRequest,
-} from '../Types/alert';
-
+import { useState, useEffect, useCallback } from 'react';
+import { HubConnection } from '@microsoft/signalr';
+import type { Alert, CreateAlertRequest } from '../Types/alert';
 import { alertService } from '../Services/alertService';
-import { signalrService } from '../Services/signalrService';
 
 export const useAlerts = (
-    isAuthenticated: boolean,
+    symbol: string,
+    hubConnection: HubConnection | null,
     soundEnabled: boolean = true
 ) => {
     const [alerts, setAlerts] = useState<Alert[]>([]);
-    const [triggeredAlert, setTriggeredAlert] =
-        useState<Alert | null>(null);
+    const [triggeredAlert, setTriggeredAlert] = useState<Alert | null>(null);
 
-    /*
-     * Aynı Audio nesnesini tekrar kullanıyoruz.
-     * Her alarm geldiğinde yeni Audio oluşturmuyoruz.
-     */
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-
-    /*
-     * Tarayıcının sesi kullanıcı etkileşiminden sonra
-     * oynatabilmesi için durum bilgisi.
-     */
-    const audioUnlockedRef = useRef<boolean>(false);
-
-    /*
-     * Audio nesnesini hazırla.
-     */
-    useEffect(() => {
-        const audio = new Audio('/alert.mp3');
-
-        audio.preload = 'auto';
-        audio.volume = 1;
-
-        audioRef.current = audio;
-
-        console.log(
-            '[useAlerts] Audio oluşturuldu:',
-            audio.src
-        );
-
-        return () => {
-            audio.pause();
-            audioRef.current = null;
-        };
+    // Hent alarmer fra backend.
+    const fetchAlerts = useCallback(async () => {
+        try {
+            const data = await alertService.getMyAlerts();
+            setAlerts(data);
+        } catch (err) {
+            console.error('[useAlerts] Alarmlar alınamadı:', err);
+        }
     }, []);
 
-    /*
-     * Chrome/Edge autoplay engelini aşmak için:
-     * Kullanıcı sayfaya ilk kez tıkladığında veya klavyeyi
-     * kullandığında audio sessiz olarak bir kez başlatılır.
-     */
     useEffect(() => {
-        const unlockAudio = (): void => {
-            if (
-                audioUnlockedRef.current ||
-                !audioRef.current
-            ) {
-                return;
-            }
+        fetchAlerts();
+    }, [fetchAlerts]);
 
-            const audio = audioRef.current;
-            const originalVolume = audio.volume;
-
-            audio.volume = 0;
-
-            void audio
-                .play()
-                .then(() => {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    audio.volume = originalVolume;
-
-                    audioUnlockedRef.current = true;
-
-                    console.log(
-                        '✅ [useAlerts] Audio unlocked'
-                    );
-                })
-                .catch((error: unknown) => {
-                    audio.volume = originalVolume;
-
-                    console.warn(
-                        '⚠️ [useAlerts] Audio unlock başarısız:',
-                        error
-                    );
-                });
-        };
-
-        window.addEventListener(
-            'pointerdown',
-            unlockAudio
-        );
-
-        window.addEventListener(
-            'keydown',
-            unlockAudio
-        );
-
-        return () => {
-            window.removeEventListener(
-                'pointerdown',
-                unlockAudio
-            );
-
-            window.removeEventListener(
-                'keydown',
-                unlockAudio
-            );
-        };
-    }, []);
-
-    /*
-     * Backend'den kullanıcının alarmlarını getirir.
-     */
-    const fetchAlerts =
-        useCallback(async (): Promise<void> => {
-            if (!isAuthenticated) {
-                return;
-            }
-
-            try {
-                const data =
-                    await alertService.getMyAlerts();
-
-                if (Array.isArray(data)) {
-                    setAlerts(data);
-                }
-
-                console.log(
-                    '[useAlerts] Alarmlar yüklendi:',
-                    data
-                );
-            } catch (error: unknown) {
-                console.error(
-                    '❌ [useAlerts] Alarmlar alınamadı:',
-                    error
-                );
-            }
-        }, [isAuthenticated]);
-
-    /*
-     * Kullanıcı giriş yaptıktan sonra alarm listesini
-     * backend'den getir.
-     *
-     * Promise callback içinde setState kullanıyoruz.
-     * Böylece react-hooks/set-state-in-effect kuralına
-     * takılmıyoruz.
-     */
+    // Realtidslistener til "ReceiveAlertTriggered" via SignalR.
     useEffect(() => {
-        if (!isAuthenticated) {
-            return;
-        }
+        if (!hubConnection) return;
 
-        let cancelled = false;
-
-        void alertService
-            .getMyAlerts()
-            .then((data) => {
-                if (
-                    !cancelled &&
-                    Array.isArray(data)
-                ) {
-                    setAlerts(data);
-
-                    console.log(
-                        '[useAlerts] İlk alarm listesi:',
-                        data
-                    );
-                }
-            })
-            .catch((error: unknown) => {
-                console.error(
-                    '❌ [useAlerts] İlk alarm listesi alınamadı:',
-                    error
-                );
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [isAuthenticated]);
-
-    /*
-     * SignalR alarm listener.
-     */
-    useEffect(() => {
-        if (!isAuthenticated) {
-            return;
-        }
-
-        console.log(
-            '🟢 [useAlerts] SignalR alert listener kaydediliyor'
-        );
-
-        console.log(
-            '[useAlerts] soundEnabled:',
-            soundEnabled
-        );
-
-        const handleAlertTriggered = (
-            alert: Alert
-        ): void => {
-            console.log(
-                '🚨 [useAlerts] ReceiveAlertTriggered GELDİ:',
-                alert
-            );
-
-            /*
-             * Toast için son tetiklenen alarmı sakla.
-             */
+        // Behandler den relevante brugerhandling eller event.
+        const handleTriggered = (alert: Alert) => {
             setTriggeredAlert(alert);
 
-            /*
-             * Listedeki alarmı tetiklenmiş olarak işaretle.
-             */
-            setAlerts((previousAlerts) =>
-                previousAlerts.map(
-                    (existingAlert) =>
-                        existingAlert.id === alert.id
-                            ? {
-                                ...existingAlert,
-                                isTriggered: true,
-                                isActive: false,
-                            }
-                            : existingAlert
+            // Afspil lyd, hvis lyd er aktiveret i brugerindstillingerne.
+            if (soundEnabled) {
+                try {
+                    const audio = new Audio('/sounds/alert.mp3');
+                    audio.volume = 0.8;
+                    audio.play().catch((err) => {
+                        console.warn('[useAlerts] Tarayıcı ses çalmayı engelledi:', err);
+                    });
+                } catch { }
+            }
+
+            // Opdater state, og markér alarmen som udløst.
+            setAlerts((prev) =>
+                prev.map((a) =>
+                    a.id === alert.id ? { ...a, isTriggered: true, isActive: false } : a
                 )
             );
-
-            /*
-             * Kullanıcı ayarlardan sesi kapatmışsa
-             * burada dur.
-             */
-            if (!soundEnabled) {
-                console.warn(
-                    '🔇 [useAlerts] Alert sesi ayarlardan kapalı'
-                );
-
-                return;
-            }
-
-            if (!audioRef.current) {
-                console.error(
-                    '❌ [useAlerts] Audio nesnesi bulunamadı'
-                );
-
-                return;
-            }
-
-            const audio = audioRef.current;
-
-            /*
-             * Ses zaten oynuyorsa başa sar.
-             */
-            audio.pause();
-            audio.currentTime = 0;
-            audio.volume = 1;
-
-            console.log(
-                '🔊 [useAlerts] Alarm sesi çalınıyor...'
-            );
-
-            console.log(
-                '[useAlerts] Audio unlocked:',
-                audioUnlockedRef.current
-            );
-
-            console.log(
-                '[useAlerts] Audio URL:',
-                audio.src
-            );
-
-            void audio
-                .play()
-                .then(() => {
-                    console.log(
-                        '✅ [useAlerts] ALARM SESİ ÇALDI'
-                    );
-                })
-                .catch((error: unknown) => {
-                    console.error(
-                        '❌ [useAlerts] ALARM SESİ ÇALMA HATASI:',
-                        error
-                    );
-                });
         };
 
-        signalrService.subscribeToAlertTriggered(
-            handleAlertTriggered
-        );
+        hubConnection.on('ReceiveAlertTriggered', handleTriggered);
 
         return () => {
-            console.log(
-                '🔴 [useAlerts] SignalR alert listener kaldırılıyor'
-            );
-
-            signalrService.unsubscribeFromAlertTriggered(
-                handleAlertTriggered
-            );
+            hubConnection.off('ReceiveAlertTriggered', handleTriggered);
         };
-    }, [isAuthenticated, soundEnabled]);
+    }, [hubConnection, soundEnabled]);
 
-    /*
-     * Yeni alarm oluştur.
-     */
-    const createAlert = useCallback(
-        async (
-            data: CreateAlertRequest
-        ): Promise<void> => {
-            try {
-                const created =
-                    await alertService.createAlert(data);
+    // Opret ny alarm
+    const createAlert = async (request: CreateAlertRequest) => {
+        const created = await alertService.createAlert(request);
+        if (created) {
+            setAlerts((prev) => [created, ...prev]);
+        }
+        return created;
+    };
 
-                if (!created) {
-                    return;
-                }
+    // Slet alarm
+    const deleteAlert = async (id: string) => {
+        await alertService.deleteAlert(id);
+        setAlerts((prev) => prev.filter((a) => a.id !== id));
+    };
 
-                setAlerts((previousAlerts) => [
-                    created,
-                    ...previousAlerts,
-                ]);
+    // Aktiver/deaktiver alarm
+    const toggleAlert = async (id: string) => {
+        await alertService.toggleAlert(id);
+        setAlerts((prev) =>
+            prev.map((a) => (a.id === id ? { ...a, isActive: !a.isActive } : a))
+        );
+    };
 
-                console.log(
-                    '✅ [useAlerts] Alarm oluşturuldu:',
-                    created
-                );
-            } catch (error: unknown) {
-                console.error(
-                    '❌ [useAlerts] Alarm oluşturulamadı:',
-                    error
-                );
-
-                throw error;
-            }
-        },
-        []
+    // Aktive og ikke-udløste alarmer for det valgte symbol.
+    const activeSymbolAlerts = alerts.filter(
+        (a) =>
+            a.symbol.toUpperCase() === symbol.toUpperCase() &&
+            a.isActive &&
+            !a.isTriggered
     );
-
-    /*
-     * Alarmı aktif/pasif yap.
-     */
-    const toggleAlert = useCallback(
-        async (
-            alertId: string
-        ): Promise<void> => {
-            try {
-                await alertService.toggleAlert(
-                    alertId
-                );
-
-                setAlerts((previousAlerts) =>
-                    previousAlerts.map((alert) =>
-                        alert.id === alertId
-                            ? {
-                                ...alert,
-                                isActive:
-                                    !alert.isActive,
-                            }
-                            : alert
-                    )
-                );
-
-                console.log(
-                    '✅ [useAlerts] Alarm durumu değiştirildi:',
-                    alertId
-                );
-            } catch (error: unknown) {
-                console.error(
-                    '❌ [useAlerts] Alarm durumu değiştirilemedi:',
-                    error
-                );
-
-                throw error;
-            }
-        },
-        []
-    );
-
-    /*
-     * Alarm sil.
-     */
-    const deleteAlert = useCallback(
-        async (
-            alertId: string
-        ): Promise<void> => {
-            try {
-                await alertService.deleteAlert(
-                    alertId
-                );
-
-                setAlerts((previousAlerts) =>
-                    previousAlerts.filter(
-                        (alert) =>
-                            alert.id !== alertId
-                    )
-                );
-
-                console.log(
-                    '✅ [useAlerts] Alarm silindi:',
-                    alertId
-                );
-            } catch (error: unknown) {
-                console.error(
-                    '❌ [useAlerts] Alarm silinemedi:',
-                    error
-                );
-
-                throw error;
-            }
-        },
-        []
-    );
-
-    /*
-     * Toast'u kapat.
-     */
-    const clearTriggeredAlert =
-        useCallback((): void => {
-            setTriggeredAlert(null);
-        }, []);
 
     return {
         alerts,
+        activeSymbolAlerts,
         triggeredAlert,
-        fetchAlerts,
+        clearTriggeredAlert: () => setTriggeredAlert(null),
         createAlert,
-        toggleAlert,
         deleteAlert,
-        clearTriggeredAlert,
+        toggleAlert,
+        refreshAlerts: fetchAlerts,
     };
 };

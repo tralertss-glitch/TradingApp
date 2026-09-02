@@ -1,18 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-    AlertCircle,
-    ArrowLeft,
-    ArrowRight,
-    Check,
-    CheckCircle2,
-    Globe,
-    Lock,
-    Mail,
-    ShieldCheck,
-    TrendingUp,
-    User,
-} from 'lucide-react';
+import {AlertCircle, ArrowLeft, ArrowRight, Check, CheckCircle2, Globe, Lock, Mail, ShieldCheck, TrendingUp, User} from 'lucide-react';
 import { authService } from '../Services/authService';
 import type { User as AuthUser } from '../Types/auth';
 
@@ -22,19 +10,7 @@ interface AuthPageProps {
 
 type AuthMode = 'login' | 'register' | 'forgot' | 'reset';
 
-// Henter de nødvendige data til denne funktion.
-const getApiErrorMessage = (err: any, fallback: string, connectionError: string) => {
-    if (err?.response?.data?.message) return err.response.data.message as string;
-
-    const validationErrors = err?.response?.data?.errors;
-    if (validationErrors && typeof validationErrors === 'object') {
-        const firstError = Object.values(validationErrors).flat()[0];
-        if (typeof firstError === 'string') return firstError;
-    }
-
-    if (err?.request) return connectionError;
-    return fallback;
-};
+import { getApiErrorMessage } from '../Utils/errorUtils';
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
     const { t, i18n } = useTranslation();
@@ -90,7 +66,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
             : '🇹🇷 TR';
 
     // Behandler den relevante brugerhandling eller event.
-    const handleSubmit = async (e: React.FormularEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
         setSuccess(null);
@@ -165,7 +141,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                 firstName: authResponse.firstName,
                 lastName: authResponse.lastName,
             });
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Kimlik doğrulama hatası:', err);
             setError(getApiErrorMessage(err, t('auth.operationFailed'), t('auth.connectionError')));
         } finally {
@@ -216,7 +192,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
                                     className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg font-medium transition-colors ${i18n.language.startsWith(lang)
                                         ? 'bg-blue-600/20 text-blue-400'
                                         : 'text-gray-300 hover:bg-gray-800'
-                                    }`}
+                                        }`}
                                 >
                                     <span>{label}</span>
                                     {i18n.language.startsWith(lang) && <Check className="w-3 h-3" />}

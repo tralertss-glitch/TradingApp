@@ -13,9 +13,9 @@ export interface DrawingStyle {
 }
 
 export type DrawingData =
-    | { points: [DrawingPoint, DrawingPoint]; style?: DrawingStyle }
-    | { price: number; style?: DrawingStyle }
-    | { point: DrawingPoint; text: string; style?: DrawingStyle };
+    | { points: [DrawingPoint, DrawingPoint]; style?: DrawingStyle; }
+    | { price: number; style?: DrawingStyle; }
+    | { point: DrawingPoint; text: string; style?: DrawingStyle; };
 
 export interface ChartDrawingDto {
     id: number;

@@ -61,8 +61,8 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
                         type="button"
                         onClick={onClose}
                         className={`p-1 rounded-lg transition-colors ${isDark
-                                ? 'text-gray-400 hover:text-white hover:bg-gray-800'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            ? 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                             }`}
                         title={t('aiPanel.close', 'Paneli Kapat')}
                     >
@@ -104,8 +104,8 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
                                 </h4>
                                 <div
                                     className={`text-xs leading-relaxed p-4 rounded-xl border whitespace-pre-line shadow-inner font-sans ${isDark
-                                            ? 'bg-[#1f2937]/30 border-gray-800/80 text-gray-300'
-                                            : 'bg-gray-50 border-gray-200 text-gray-700'
+                                        ? 'bg-[#1f2937]/30 border-gray-800/80 text-gray-300'
+                                        : 'bg-gray-50 border-gray-200 text-gray-700'
                                         }`}
                                 >
                                     {analysis.analysisText}

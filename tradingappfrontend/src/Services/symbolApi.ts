@@ -24,16 +24,16 @@ export const symbolApi = {
         return response.data;
     },
 
-    syncExchange: async (exchangeCode: string): Promise<{ message: string }> => {
-        const response = await api.post<{ message: string }>(`/symbols/sync/${encodeURIComponent(exchangeCode)}`);
+    syncExchange: async (exchangeCode: string): Promise<{ message: string; }> => {
+        const response = await api.post<{ message: string; }>(`/symbols/sync/${encodeURIComponent(exchangeCode)}`);
         return response.data;
     },
 
     toggleSymbolStatus: async (
         symbolId: number,
         isActive: boolean
-    ): Promise<{ message: string; symbolId: number; exchangeCode: string; symbolName: string; isActive: boolean; historicalSyncQueued: boolean; realtimeRestartRequested: boolean }> => {
-        const response = await api.put<{ message: string; symbolId: number; exchangeCode: string; symbolName: string; isActive: boolean; historicalSyncQueued: boolean; realtimeRestartRequested: boolean }>(
+    ): Promise<{ message: string; symbolId: number; exchangeCode: string; symbolName: string; isActive: boolean; historicalSyncQueued: boolean; realtimeRestartRequested: boolean; }> => {
+        const response = await api.put<{ message: string; symbolId: number; exchangeCode: string; symbolName: string; isActive: boolean; historicalSyncQueued: boolean; realtimeRestartRequested: boolean; }>(
             `/symbols/${symbolId}/status`,
             { isActive }
         );

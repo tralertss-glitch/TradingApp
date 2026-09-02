@@ -56,8 +56,15 @@ export const authService = {
     },
 
     getCurrentUser: (): User | null => {
-        const userStr = localStorage.getItem('user');
-        return userStr ? JSON.parse(userStr) : null;
+        const userJson = localStorage.getItem('user');
+        if (!userJson) return null;
+
+        try {
+            return JSON.parse(userJson) as User;
+        } catch {
+            localStorage.removeItem('user');
+            return null;
+        }
     },
 
     isAuthenticated: (): boolean => !!localStorage.getItem('token'),

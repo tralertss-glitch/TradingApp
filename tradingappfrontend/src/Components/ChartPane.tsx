@@ -1,21 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-    createChart,
-    CandlestickSeries,
-    BarSeries,
-    LineSeries,
-    AreaSeries,
-} from 'lightweight-charts';
-import type {
-    IChartApi,
-    ISeriesApi,
-    CandlestickData,
-    LineData,
-    Time,
-    LogicalRange,
-    IPriceLine,
-    MouseEventParams,
-} from 'lightweight-charts';
+import {createChart, CandlestickSeries, BarSeries, LineSeries, AreaSeries} from 'lightweight-charts';
+import type {IChartApi, ISeriesApi, CandlestickData, LineData, Time, LogicalRange, IPriceLine, MouseEventParams} from 'lightweight-charts';
 import { TrendingUp } from 'lucide-react';
 import { DrawingLayer } from './Chart/DrawingLayer';
 import { useTranslation } from 'react-i18next';
@@ -25,12 +10,7 @@ import type { CandleData, ChartType } from '../Types/candle';
 import type { IndicatorConfig } from '../Types/indicator';
 import type { ChartVisualSettings } from '../Types/chartSettings';
 import type { Alert } from '../Types/alert';
-import {
-    calculateSMA,
-    calculateEMA,
-    calculateBollingerBands,
-    calculateRSI,
-} from '../Utils/indicatorCalculators';
+import {calculateSMA, calculateEMA, calculateBollingerBands, calculateRSI} from '../Utils/indicatorCalculators';
 
 interface ChartPaneProps {
     symbolId: number;
@@ -375,7 +355,7 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
             if (ind.type === 'SMA' || ind.type === 'EMA') {
                 const line = chart.addSeries(LineSeries, {
                     color: ind.color,
-                    lineWidth: 1.5 as any,
+                    lineWidth: 2,
                     priceLineVisible: false,
                     lastValueVisible: true,
                 });
@@ -383,25 +363,25 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
             } else if (ind.type === 'BB') {
                 const upper = chart.addSeries(LineSeries, {
                     color: ind.color,
-                    lineWidth: 1 as any,
+                    lineWidth: 1,
                     priceLineVisible: false,
                 });
                 const middle = chart.addSeries(LineSeries, {
                     color: ind.color,
-                    lineWidth: 1 as any,
+                    lineWidth: 1,
                     lineStyle: 2,
                     priceLineVisible: false,
                 });
                 const lower = chart.addSeries(LineSeries, {
                     color: ind.color,
-                    lineWidth: 1 as any,
+                    lineWidth: 1,
                     priceLineVisible: false,
                 });
                 indicatorSeriesRef.current.set(ind.id, [upper, middle, lower]);
             } else if (ind.type === 'RSI') {
                 const rsiLine = chart.addSeries(LineSeries, {
                     color: ind.color,
-                    lineWidth: 1.5 as any,
+                    lineWidth: 2,
                     priceScaleId: 'rsi',
                 });
                 chart.priceScale('rsi').applyOptions({
@@ -832,10 +812,10 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
         <div
             onClick={onSelectPane}
             className={`flex flex-col w-full h-full relative overflow-hidden cursor-pointer transition-all border ${isSelected
-                    ? 'border-[#2962ff] ring-1 ring-[#2962ff]/40 shadow-md'
-                    : isDark
-                        ? 'border-[#2a2e39] bg-[#131722]'
-                        : 'border-gray-200 bg-white'
+                ? 'border-[#2962ff] ring-1 ring-[#2962ff]/40 shadow-md'
+                : isDark
+                    ? 'border-[#2a2e39] bg-[#131722]'
+                    : 'border-gray-200 bg-white'
                 }`}
         >
             {/* Legend og OHLC */}
@@ -897,11 +877,10 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
 
                 {historyPending && !loading && (
                     <div
-                        className={`absolute left-3 top-3 z-10 flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[11px] shadow-sm backdrop-blur-sm pointer-events-none select-none ${
-                            isDark
+                        className={`absolute left-3 top-3 z-10 flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[11px] shadow-sm backdrop-blur-sm pointer-events-none select-none ${isDark
                                 ? 'border-[#2a2e39] bg-[#131722]/85 text-gray-300'
                                 : 'border-gray-200 bg-white/90 text-gray-600'
-                        }`}
+                            }`}
                     >
                         <span className="h-1.5 w-1.5 rounded-full bg-[#2962ff] animate-pulse" />
                         <span>{t('chartPane.historySyncing', 'Geçmiş veriler senkronize ediliyor')}</span>

@@ -53,18 +53,9 @@ export const Watchlist: React.FC<WatchlistProps> = ({
     const [liveQuotes, setLiveQuotes] = useState<Record<number, LiveQuote>>({});
     const [busy, setBusy] = useState(false);
 
-    useEffect(() => {
-        if (watchlists.length === 0) {
-            setActiveListId(null);
-            return;
-        }
-
-        if (activeListId == null || !watchlists.some((w) => w.id === activeListId)) {
-            setActiveListId(watchlists[0].id);
-        }
-    }, [watchlists, activeListId]);
-
-    const currentList = watchlists.find((w) => w.id === activeListId) || watchlists[0];
+    const currentList =
+        watchlists.find((w) => w.id === activeListId) ??
+        watchlists[0];
     const symbolMap = useMemo(() => new Map(activeSymbols.map((s) => [s.id, s])), [activeSymbols]);
 
     const availableSymbols = useMemo(() => {
@@ -159,7 +150,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({
     }, [currentList?.id, currentList?.items, symbolMap]);
 
     // Håndterer submit list.
-    const submitList = async (event: React.FormularEvent) => {
+    const submitList = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const name = newListName.trim();
         if (!name || busy) return;

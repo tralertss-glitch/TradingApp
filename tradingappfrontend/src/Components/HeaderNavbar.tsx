@@ -1,21 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import {
-    User,
-    LogOut,
-    Plus,
-    BarChart2,
-    Check,
-    ChevronDown,
-    Settings,
-    Bell,
-    Globe,
-    Home,
-    HelpCircle,
-    Send,
-    CheckCircle2,
-    X,
-    TrendingUp
-} from 'lucide-react';
+import {User, LogOut, Plus, BarChart2, Check, ChevronDown, Settings, Bell, Globe, Home, HelpCircle, Send, CheckCircle2, X, TrendingUp} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../Context/ThemeContext';
 import { preferenceService } from '../Services/preferenceService';
@@ -103,7 +87,7 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
     const layoutRef = useRef<HTMLDivElement>(null);
     const langRef = useRef<HTMLDivElement>(null);
 
-    const CHART_TYPES: { id: ChartType; label: string; icon: string }[] = useMemo(
+    const CHART_TYPES: { id: ChartType; label: string; icon: string; }[] = useMemo(
         () => [
             { id: 'candles', label: t('header.chartTypes.candles', 'Mumlar (Candles)'), icon: '🕯️' },
             { id: 'bars', label: t('header.chartTypes.bars', 'Çubuklar (Bars)'), icon: '📊' },
@@ -154,11 +138,11 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
         i18n.changeLanguage(lang);
         localStorage.setItem('tradingpro_lang', lang);
         setIsLangOpen(false);
-        preferenceService.savePreferences({ Language: lang } as any).catch(() => { });
+        preferenceService.updatePreferences({ language: lang }).catch(() => { });
     };
 
     // Behandler den relevante brugerhandling eller event.
-    const handleContactSubmit = (e: React.FormularEvent) => {
+    const handleContactSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setHelpSent(true);
         setTimeout(() => {
@@ -206,8 +190,8 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                         {isHamburgerOpen && (
                             <div
                                 className={`absolute top-full left-0 mt-1.5 w-64 rounded-xl shadow-2xl z-50 py-2 divide-y text-xs backdrop-blur-xl ${isDark
-                                        ? 'bg-[#1e222d] border border-[#2a2e39] divide-[#2a2e39] text-gray-200'
-                                        : 'bg-white border border-gray-200 divide-gray-100 text-gray-800'
+                                    ? 'bg-[#1e222d] border border-[#2a2e39] divide-[#2a2e39] text-gray-200'
+                                    : 'bg-white border border-gray-200 divide-gray-100 text-gray-800'
                                     }`}
                             >
                                 <div className="px-4 py-2 flex items-center justify-between">
@@ -278,8 +262,8 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                             type="button"
                             onClick={() => setIsSearchOpen(true)}
                             className={`flex items-center space-x-2 px-3 py-1 rounded-full font-bold text-xs transition-all border ${isDark
-                                    ? 'bg-[#2a2e39]/60 hover:bg-[#2a2e39] border-transparent text-[#2962ff]'
-                                    : 'bg-[#e0e3eb]/70 hover:bg-[#e0e3eb] border-transparent text-[#2962ff]'
+                                ? 'bg-[#2a2e39]/60 hover:bg-[#2a2e39] border-transparent text-[#2962ff]'
+                                : 'bg-[#e0e3eb]/70 hover:bg-[#e0e3eb] border-transparent text-[#2962ff]'
                                 }`}
                         >
                             <span className="tracking-wide text-xs">{currentSymbol}</span><span className="text-[9px] text-gray-500">{currentExchangeCode}</span>
@@ -414,10 +398,10 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                             type="button"
                             onClick={() => setIsIndicatorsOpen(!isIndicatorsOpen)}
                             className={`flex items-center space-x-1.5 px-2 py-1 rounded text-xs font-semibold transition-colors ${activeIndicatorsCount > 0
-                                    ? 'bg-blue-500/10 text-[#2962ff]'
-                                    : isDark
-                                        ? 'text-gray-300 hover:bg-gray-500/10'
-                                        : 'text-gray-700 hover:bg-gray-100'
+                                ? 'bg-blue-500/10 text-[#2962ff]'
+                                : isDark
+                                    ? 'text-gray-300 hover:bg-gray-500/10'
+                                    : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                         >
                             <BarChart2 className="w-4 h-4 text-[#2962ff]" />
@@ -445,12 +429,12 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                                             type="button"
                                             onClick={() => onToggleIndicator(ind.id)}
                                             className={`w-full flex items-center justify-between px-2.5 py-2 text-xs font-semibold rounded-lg transition-colors ${ind.enabled
-                                                    ? isDark
-                                                        ? 'bg-blue-600/15 text-[#2962ff]'
-                                                        : 'bg-blue-50 text-[#2962ff]'
-                                                    : isDark
-                                                        ? 'hover:bg-gray-500/10 text-gray-300'
-                                                        : 'hover:bg-gray-100 text-gray-700'
+                                                ? isDark
+                                                    ? 'bg-blue-600/15 text-[#2962ff]'
+                                                    : 'bg-blue-50 text-[#2962ff]'
+                                                : isDark
+                                                    ? 'hover:bg-gray-500/10 text-gray-300'
+                                                    : 'hover:bg-gray-100 text-gray-700'
                                                 }`}
                                         >
                                             <div className="flex items-center space-x-2.5">
@@ -463,10 +447,10 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
 
                                             <div
                                                 className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${ind.enabled
-                                                        ? 'bg-[#2962ff] border-[#2962ff] text-white'
-                                                        : isDark
-                                                            ? 'border-gray-600 bg-gray-800'
-                                                            : 'border-gray-300 bg-white'
+                                                    ? 'bg-[#2962ff] border-[#2962ff] text-white'
+                                                    : isDark
+                                                        ? 'border-gray-600 bg-gray-800'
+                                                        : 'border-gray-300 bg-white'
                                                     }`}
                                             >
                                                 {ind.enabled && <Check className="w-3 h-3 stroke-[3]" />}
@@ -524,10 +508,10 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                         type="button"
                         onClick={onOpenAlertModal}
                         className={`relative flex items-center space-x-1 px-2.5 py-1 rounded text-xs font-semibold transition-all ${activeAlertsCount > 0
-                                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25'
-                                : isDark
-                                    ? 'text-gray-300 hover:bg-gray-500/10 hover:text-amber-400'
-                                    : 'text-gray-700 hover:bg-gray-100 hover:text-amber-600'
+                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25'
+                            : isDark
+                                ? 'text-gray-300 hover:bg-gray-500/10 hover:text-amber-400'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-amber-600'
                             }`}
                         title={t('header.createAlertTooltip', 'Prisalarm Kur')}
                     >
@@ -556,8 +540,8 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                             type="button"
                             onClick={() => setIsLangOpen(!isLangOpen)}
                             className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-semibold transition-colors border ${isDark
-                                    ? 'border-[#2a2e39] bg-[#1e222d] text-gray-300 hover:bg-gray-500/10'
-                                    : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                ? 'border-[#2a2e39] bg-[#1e222d] text-gray-300 hover:bg-gray-500/10'
+                                : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
                                 }`}
                             title={t('header.changeLanguage', 'Dil Değiştir')}
                         >
@@ -680,8 +664,8 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                                 type="button"
                                 onClick={() => setHelpTab('faq')}
                                 className={`flex-1 py-2.5 text-center transition-colors border-b-2 ${helpTab === 'faq'
-                                        ? 'border-purple-500 text-purple-400 bg-purple-500/5'
-                                        : 'border-transparent text-gray-400 hover:text-gray-200'
+                                    ? 'border-purple-500 text-purple-400 bg-purple-500/5'
+                                    : 'border-transparent text-gray-400 hover:text-gray-200'
                                     }`}
                             >
                                 {t('helpCenter.faqTab', 'Sıkça Sorulan Sorular')}
@@ -690,8 +674,8 @@ export const HeaderNavbar: React.FC<HeaderNavbarProps> = ({
                                 type="button"
                                 onClick={() => setHelpTab('contact')}
                                 className={`flex-1 py-2.5 text-center transition-colors border-b-2 ${helpTab === 'contact'
-                                        ? 'border-purple-500 text-purple-400 bg-purple-500/5'
-                                        : 'border-transparent text-gray-400 hover:text-gray-200'
+                                    ? 'border-purple-500 text-purple-400 bg-purple-500/5'
+                                    : 'border-transparent text-gray-400 hover:text-gray-200'
                                     }`}
                             >
                                 {t('helpCenter.contactTab', 'Bize Ulaşın')}
