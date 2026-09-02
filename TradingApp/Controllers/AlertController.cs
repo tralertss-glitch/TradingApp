@@ -38,7 +38,6 @@ public class AlertController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(userId))
             return Unauthorized(new { message = "Yetkisiz işlem." });
-
         return Ok(await _candleService.GetUserAlertsAsync(userId));
     }
 
@@ -47,12 +46,10 @@ public class AlertController : ControllerBase
     /// GET: api/alerts/active?symbolId=10
     /// </summary>
     [HttpGet("active")]
-    public async Task<ActionResult<IEnumerable<AlertResponseDto>>> GetActiveAlertsBySymbol(
-        [FromQuery] int symbolId)
+    public async Task<ActionResult<IEnumerable<AlertResponseDto>>> GetActiveAlertsBySymbol([FromQuery] int symbolId)
     {
         if (symbolId <= 0)
             return BadRequest(new { message = "Geçerli bir symbolId zorunludur." });
-
         return Ok(await _candleService.GetActiveAlertsBySymbolAsync(symbolId));
     }
 
@@ -61,8 +58,7 @@ public class AlertController : ControllerBase
     /// POST: api/alerts
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<AlertResponseDto>> CreateAlert(
-        [FromBody] CreateAlertDto dto)
+    public async Task<ActionResult<AlertResponseDto>> CreateAlert([FromBody] CreateAlertDto dto)
     {
         var userId = GetUserId();
 
@@ -81,10 +77,7 @@ public class AlertController : ControllerBase
         {
             var createdAlert = await _candleService.CreateAlertAsync(userId, dto);
 
-            return CreatedAtAction(
-                nameof(GetMyAlerts),
-                new { id = createdAlert.Id },
-                createdAlert);
+            return CreatedAtAction(nameof(GetMyAlerts), new { id = createdAlert.Id }, createdAlert);
         }
         catch (ArgumentException ex)
         {
@@ -113,7 +106,6 @@ public class AlertController : ControllerBase
                 message = "Alarm bulunamadı veya bu işlem için yetkiniz yok."
             });
         }
-
         return Ok(new { message = "Alarm başarıyla silindi." });
     }
 
@@ -138,7 +130,6 @@ public class AlertController : ControllerBase
                 message = "Alarm bulunamadı veya güncellenemedi."
             });
         }
-
         return Ok(new { message = "Alarm durumu başarıyla güncellendi." });
     }
 }
