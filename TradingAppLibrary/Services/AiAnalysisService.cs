@@ -14,11 +14,7 @@ public class AiAnalysisService : IAiAnalysisService
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
 
-    public AiAnalysisService(
-        ICandleRepository candleRepository,
-        ISymbolRepository symbolRepository,
-        HttpClient httpClient,
-        IConfiguration configuration)
+    public AiAnalysisService(ICandleRepository candleRepository, ISymbolRepository symbolRepository, HttpClient httpClient, IConfiguration configuration)
     {
         _candleRepository = candleRepository;
         _symbolRepository = symbolRepository;
@@ -62,8 +58,7 @@ public class AiAnalysisService : IAiAnalysisService
                 DateTime.UtcNow);
         }
 
-        var candleData = string.Join("\n", candles.TakeLast(20).Select(c =>
-            $"Time: {c.OpenTime:yyyy-MM-dd HH:mm} | Open: {c.Open.ToString(CultureInfo.InvariantCulture)} | High: {c.High.ToString(CultureInfo.InvariantCulture)} | Low: {c.Low.ToString(CultureInfo.InvariantCulture)} | Close: {c.Close.ToString(CultureInfo.InvariantCulture)} | Volume: {c.Volume.ToString(CultureInfo.InvariantCulture)}"));
+        var candleData = string.Join("\n", candles.TakeLast(20).Select(c => $"Time: {c.OpenTime:yyyy-MM-dd HH:mm} | Open: {c.Open.ToString(CultureInfo.InvariantCulture)} | High: {c.High.ToString(CultureInfo.InvariantCulture)} | Low: {c.Low.ToString(CultureInfo.InvariantCulture)} | Close: {c.Close.ToString(CultureInfo.InvariantCulture)} | Volume: {c.Volume.ToString(CultureInfo.InvariantCulture)}"));
 
         var (systemPrompt, userPrompt) = BuildPrompt(
             language,
@@ -74,7 +69,7 @@ public class AiAnalysisService : IAiAnalysisService
 
         var requestBody = new
         {
-            model = "llama-3.3-70b-versatile",
+            model = "openai/gpt-oss-120b",
             messages = new[]
             {
                 new { role = "system", content = systemPrompt },
@@ -83,15 +78,10 @@ public class AiAnalysisService : IAiAnalysisService
             temperature = 0.2
         };
 
-        using var httpRequest = new HttpRequestMessage(
-            HttpMethod.Post,
-            "https://api.groq.com/openai/v1/chat/completions");
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://api.groq.com/openai/v1/chat/completions");
 
         httpRequest.Headers.Add("Authorization", $"Bearer {_apiKey}");
-        httpRequest.Content = new StringContent(
-            JsonSerializer.Serialize(requestBody),
-            Encoding.UTF8,
-            "application/json");
+        httpRequest.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
         try
         {
@@ -100,15 +90,7 @@ public class AiAnalysisService : IAiAnalysisService
 
             if (!response.IsSuccessStatusCode)
             {
-                return new AiAnalysisResponseDto(
-                    symbol.Id,
-                    symbol.Name,
-                    symbol.Exchange.Code,
-                    Localize(language,
-                        tr: $"Groq API hatası [{response.StatusCode}].",
-                        en: $"Groq API error [{response.StatusCode}].",
-                        da: $"Groq API-fejl [{response.StatusCode}]."),
-                    DateTime.UtcNow);
+                return new AiAnalysisResponseDto(symbol.Id, symbol.Name, symbol.Exchange.Code, $"Groq API error [{(int)response.StatusCode} {response.StatusCode}]: {jsonResponse}", DateTime.UtcNow);
             }
 
             using var doc = JsonDocument.Parse(jsonResponse);
@@ -118,27 +100,17 @@ public class AiAnalysisService : IAiAnalysisService
                 .GetProperty("content")
                 .GetString();
 
-            return new AiAnalysisResponseDto(
-                symbol.Id,
-                symbol.Name,
-                symbol.Exchange.Code,
-                aiText ?? Localize(language,
+            return new AiAnalysisResponseDto(symbol.Id, symbol.Name, symbol.Exchange.Code, aiText ?? Localize(language,
                     tr: "Yapay zeka analiz sonucu üretemedi.",
                     en: "The AI could not produce an analysis result.",
-                    da: "AI'en kunne ikke generere et analyseresultat."),
-                DateTime.UtcNow);
+                    da: "AI'en kunne ikke generere et analyseresultat."), DateTime.UtcNow);
         }
         catch (Exception ex)
         {
-            return new AiAnalysisResponseDto(
-                symbol.Id,
-                symbol.Name,
-                symbol.Exchange.Code,
-                Localize(language,
+            return new AiAnalysisResponseDto(symbol.Id, symbol.Name, symbol.Exchange.Code, Localize(language,
                     tr: $"İstek işlenirken hata oluştu: {ex.Message}",
                     en: $"An error occurred while processing the request: {ex.Message}",
-                    da: $"Der opstod en fejl under behandlingen af anmodningen: {ex.Message}"),
-                DateTime.UtcNow);
+                    da: $"Der opstod en fejl under behandlingen af anmodningen: {ex.Message}"), DateTime.UtcNow);
         }
     }
 

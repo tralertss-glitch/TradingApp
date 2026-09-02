@@ -59,7 +59,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICandleService, CandleService>();
 builder.Services.AddScoped<ISymbolService, SymbolService>();
 builder.Services.AddScoped<IWatchlistService, WatchlistService>();
-builder.Services.AddScoped<IAiAnalysisService, AiAnalysisService>();
+builder.Services.AddHttpClient<IAiAnalysisService, AiAnalysisService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IChartDrawingService, ChartDrawingService>();
