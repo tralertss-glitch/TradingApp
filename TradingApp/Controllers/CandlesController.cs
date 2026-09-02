@@ -22,11 +22,7 @@ public class CandlesController : ControllerBase
     /// GET: api/candles?symbolId=10&interval=1h&limit=100&endTime=1710000000000
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CandleResponseDto>>> GetCandles(
-        [FromQuery] int symbolId,
-        [FromQuery] string interval = "1m",
-        [FromQuery] int limit = 1000,
-        [FromQuery] long? endTime = null)
+    public async Task<ActionResult<IEnumerable<CandleResponseDto>>> GetCandles([FromQuery] int symbolId, [FromQuery] string interval = "1m", [FromQuery] int limit = 1000, [FromQuery] long? endTime = null)
     {
         if (symbolId <= 0)
             return BadRequest(new { message = "Geçerli bir symbolId zorunludur." });
@@ -35,13 +31,7 @@ public class CandlesController : ControllerBase
             return BadRequest(new { message = "Interval parametresi zorunludur." });
 
         limit = Math.Clamp(limit, 1, 1000);
-
-        var candles = await _candleService.GetCandlesAsync(
-            symbolId,
-            interval,
-            limit,
-            endTime);
-
+        var candles = await _candleService.GetCandlesAsync(symbolId, interval, limit, endTime);
         return Ok(candles);
     }
 }
