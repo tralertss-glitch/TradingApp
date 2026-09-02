@@ -12,10 +12,7 @@ public sealed record CandleValidationResult(bool IsValid, IReadOnlyList<string> 
 }
 
 // Behandler candle batch validation result.
-public sealed record CandleBatchValidationResult(
-    bool IsValid,
-    IReadOnlyList<string> Errors,
-    IReadOnlyList<string> Warnings)
+public sealed record CandleBatchValidationResult(bool IsValid, IReadOnlyList<string> Errors, IReadOnlyList<string> Warnings)
 {
     // Behandler success.
     public static CandleBatchValidationResult Success(IReadOnlyList<string>? warnings = null) =>
