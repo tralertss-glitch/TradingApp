@@ -20,8 +20,7 @@ public sealed class SystemHealthController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(SystemHealthDto), StatusCodes.Status200OK)]
     // Henter den relevante operation.
-    public async Task<ActionResult<SystemHealthDto>> Get(
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<SystemHealthDto>> Get(CancellationToken cancellationToken)
     {
         var health = await _systemHealthService.GetHealthAsync(cancellationToken);
         return Ok(health);
