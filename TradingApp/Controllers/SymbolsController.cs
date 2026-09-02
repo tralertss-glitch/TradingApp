@@ -12,9 +12,7 @@ public class SymbolsController : ControllerBase
     private readonly ISymbolService _symbolService;
     private readonly IMarketDataSyncService _marketDataSyncService;
 
-    public SymbolsController(
-        ISymbolService symbolService,
-        IMarketDataSyncService marketDataSyncService)
+    public SymbolsController(ISymbolService symbolService, IMarketDataSyncService marketDataSyncService)
     {
         _symbolService = symbolService;
         _marketDataSyncService = marketDataSyncService;
@@ -26,9 +24,7 @@ public class SymbolsController : ControllerBase
     /// GET: api/symbols?query=BTC&exchangeId=1
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SymbolResponseDto>>> GetSymbols(
-        [FromQuery] string? query = null,
-        [FromQuery] int? exchangeId = null)
+    public async Task<ActionResult<IEnumerable<SymbolResponseDto>>> GetSymbols([FromQuery] string? query = null, [FromQuery] int? exchangeId = null)
     {
         if (exchangeId.HasValue && exchangeId.Value <= 0)
             return BadRequest(new { message = "Geçersiz exchangeId." });
@@ -70,16 +66,12 @@ public class SymbolsController : ControllerBase
     /// </summary>
     [HttpPost("sync/{exchangeCode}")]
     [Authorize(Roles = "Admin,SuperAdmin")]
-    public async Task<IActionResult> SyncSymbols(
-        string exchangeCode,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> SyncSymbols(string exchangeCode, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(exchangeCode))
             return BadRequest(new { message = "Exchange kodu zorunludur." });
 
-        await _marketDataSyncService.SyncExchangeSymbolsAsync(
-            exchangeCode.Trim().ToUpperInvariant(),
-            cancellationToken);
+        await _marketDataSyncService.SyncExchangeSymbolsAsync(exchangeCode.Trim().ToUpperInvariant(), cancellationToken);
 
         return Ok(new
         {
@@ -92,8 +84,7 @@ public class SymbolsController : ControllerBase
     /// GET: api/symbols/active?exchangeId=1
     /// </summary>
     [HttpGet("active")]
-    public async Task<ActionResult<IEnumerable<SymbolResponseDto>>> GetActiveSymbols(
-        [FromQuery] int exchangeId)
+    public async Task<ActionResult<IEnumerable<SymbolResponseDto>>> GetActiveSymbols([FromQuery] int exchangeId)
     {
         if (exchangeId <= 0)
             return BadRequest(new { message = "Geçerli bir exchangeId zorunludur." });
@@ -107,13 +98,9 @@ public class SymbolsController : ControllerBase
     /// </summary>
     [HttpPut("{symbolId:int}/status")]
     [Authorize(Roles = "Admin,SuperAdmin")]
-    public async Task<IActionResult> ToggleStatus(
-        int symbolId,
-        [FromBody] ToggleStatusDto dto)
+    public async Task<IActionResult> ToggleStatus(int symbolId, [FromBody] ToggleStatusDto dto)
     {
-        var result = await _symbolService.UpdateSymbolStatusAsync(
-            symbolId,
-            dto.IsActive);
+        var result = await _symbolService.UpdateSymbolStatusAsync(symbolId, dto.IsActive);
 
         if (result == null)
             return NotFound(new { message = "Sembol bulunamadı." });
