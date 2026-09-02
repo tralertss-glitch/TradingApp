@@ -9,31 +9,25 @@ public class ExchangeManagementService : IExchangeManagementService
     private readonly IExchangeRepository _exchangeRepository;
     private readonly IExchangeServiceFactory _exchangeServiceFactory;
 
-    public ExchangeManagementService(
-        IExchangeRepository exchangeRepository,
-        IExchangeServiceFactory exchangeServiceFactory)
+    public ExchangeManagementService(IExchangeRepository exchangeRepository, IExchangeServiceFactory exchangeServiceFactory)
     {
         _exchangeRepository = exchangeRepository;
         _exchangeServiceFactory = exchangeServiceFactory;
     }
 
-    public async Task<IEnumerable<ExchangeResponseDto>> GetActiveExchangesAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<ExchangeResponseDto>> GetActiveExchangesAsync(CancellationToken cancellationToken = default)
     {
         var exchanges = await _exchangeRepository.GetActiveAsync(cancellationToken);
         return exchanges.Select(ToDto);
     }
 
-    public async Task<IEnumerable<ExchangeResponseDto>> GetAllExchangesAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<ExchangeResponseDto>> GetAllExchangesAsync(CancellationToken cancellationToken = default)
     {
         var exchanges = await _exchangeRepository.GetAllAsync(cancellationToken);
         return exchanges.Select(ToDto);
     }
 
-    public async Task<ExchangeOperationResult> CreateExchangeAsync(
-        CreateExchangeDto dto,
-        CancellationToken cancellationToken = default)
+    public async Task<ExchangeOperationResult> CreateExchangeAsync(CreateExchangeDto dto, CancellationToken cancellationToken = default)
     {
         var code = NormalizeCode(dto.Code);
         var name = dto.Name?.Trim() ?? string.Empty;
@@ -56,16 +50,11 @@ public class ExchangeManagementService : IExchangeManagementService
             Name = name,
             IsActive = dto.IsActive
         };
-
         await _exchangeRepository.AddAsync(exchange, cancellationToken);
-
         return Success(exchange);
     }
 
-    public async Task<ExchangeOperationResult> UpdateExchangeAsync(
-        int id,
-        UpdateExchangeDto dto,
-        CancellationToken cancellationToken = default)
+    public async Task<ExchangeOperationResult> UpdateExchangeAsync(int id, UpdateExchangeDto dto, CancellationToken cancellationToken = default)
     {
         var exchange = await _exchangeRepository.GetByIdAsync(id, cancellationToken);
 
@@ -100,15 +89,11 @@ public class ExchangeManagementService : IExchangeManagementService
 
         exchange.Name = name;
         exchange.IsActive = dto.IsActive;
-
         await _exchangeRepository.SaveChangesAsync(cancellationToken);
-
         return Success(exchange);
     }
 
-    public async Task<ExchangeOperationResult> DeleteExchangeAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task<ExchangeOperationResult> DeleteExchangeAsync(int id, CancellationToken cancellationToken = default)
     {
         var exchange = await _exchangeRepository.GetByIdAsync(id, cancellationToken);
 
@@ -120,7 +105,6 @@ public class ExchangeManagementService : IExchangeManagementService
             return Conflict(
                 "This exchange already has symbols/history and cannot be deleted safely. Set it inactive instead.");
         }
-
         await _exchangeRepository.DeleteAsync(exchange, cancellationToken);
         return new ExchangeOperationResult(true);
     }
