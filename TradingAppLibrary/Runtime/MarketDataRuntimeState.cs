@@ -161,9 +161,7 @@ public sealed class MarketDataRuntimeState : IMarketDataRuntimeState
 }
 
 // Behandler market data runtime snapshot.
-public sealed record MarketDataRuntimeSnapshot(
-    DateTime StartedAtUtc,
-    IReadOnlyDictionary<string, ExchangeRuntimeSnapshot> Exchanges);
+public sealed record MarketDataRuntimeSnapshot(DateTime StartedAtUtc, IReadOnlyDictionary<string, ExchangeRuntimeSnapshot> Exchanges);
 
 // Behandler exchange runtime snapshot.
 public sealed record ExchangeRuntimeSnapshot(
