@@ -1,6 +1,6 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TradingAppLibrary.DTO;
 using TradingAppLibrary.Interfaces;
 
@@ -20,29 +20,20 @@ public class ChartDrawingsController : ControllerBase
 
     [HttpGet]
     // Henter den relevante operation.
-    public async Task<ActionResult<IReadOnlyList<ChartDrawingResponseDto>>> Get(
-        [FromQuery] int symbolId,
-        [FromQuery] string interval,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<ChartDrawingResponseDto>>> Get([FromQuery] int symbolId, [FromQuery] string interval, CancellationToken cancellationToken)
     {
         if (symbolId <= 0 || string.IsNullOrWhiteSpace(interval))
             return BadRequest(new { message = "symbolId ve interval zorunludur." });
-
-        return Ok(await _chartDrawingService.GetAsync(
-            GetCurrentUserId(), symbolId, interval, cancellationToken));
+        return Ok(await _chartDrawingService.GetAsync(GetCurrentUserId(), symbolId, interval, cancellationToken));
     }
 
     [HttpPost]
     // Opretter den relevante operation.
-    public async Task<ActionResult<ChartDrawingResponseDto>> Create(
-        [FromBody] CreateChartDrawingDto dto,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ChartDrawingResponseDto>> Create([FromBody] CreateChartDrawingDto dto, CancellationToken cancellationToken)
     {
         try
         {
-            var created = await _chartDrawingService.CreateAsync(
-                GetCurrentUserId(), dto, cancellationToken);
-
+            var created = await _chartDrawingService.CreateAsync(GetCurrentUserId(), dto, cancellationToken);
             return CreatedAtAction(nameof(Get), new { symbolId = created.SymbolId, interval = created.Interval }, created);
         }
         catch (ArgumentException ex)
@@ -57,16 +48,11 @@ public class ChartDrawingsController : ControllerBase
 
     [HttpPut("{drawingId:long}")]
     // Opdaterer den relevante operation.
-    public async Task<ActionResult<ChartDrawingResponseDto>> Update(
-        long drawingId,
-        [FromBody] UpdateChartDrawingDto dto,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ChartDrawingResponseDto>> Update(long drawingId, [FromBody] UpdateChartDrawingDto dto, CancellationToken cancellationToken)
     {
         try
         {
-            var updated = await _chartDrawingService.UpdateAsync(
-                GetCurrentUserId(), drawingId, dto, cancellationToken);
-
+            var updated = await _chartDrawingService.UpdateAsync(GetCurrentUserId(), drawingId, dto, cancellationToken);
             return updated == null
                 ? NotFound(new { message = "Çizim bulunamadı." })
                 : Ok(updated);
@@ -81,8 +67,7 @@ public class ChartDrawingsController : ControllerBase
     // Sletter den relevante operation.
     public async Task<IActionResult> Delete(long drawingId, CancellationToken cancellationToken)
     {
-        var deleted = await _chartDrawingService.DeleteAsync(
-            GetCurrentUserId(), drawingId, cancellationToken);
+        var deleted = await _chartDrawingService.DeleteAsync(GetCurrentUserId(), drawingId, cancellationToken);
 
         return deleted
             ? NoContent()
@@ -91,17 +76,12 @@ public class ChartDrawingsController : ControllerBase
 
     [HttpDelete]
     // Sletter all.
-    public async Task<IActionResult> DeleteAll(
-        [FromQuery] int symbolId,
-        [FromQuery] string interval,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteAll([FromQuery] int symbolId, [FromQuery] string interval, CancellationToken cancellationToken)
     {
         if (symbolId <= 0 || string.IsNullOrWhiteSpace(interval))
             return BadRequest(new { message = "symbolId ve interval zorunludur." });
 
-        var deletedCount = await _chartDrawingService.DeleteAllAsync(
-            GetCurrentUserId(), symbolId, interval, cancellationToken);
-
+        var deletedCount = await _chartDrawingService.DeleteAllAsync(GetCurrentUserId(), symbolId, interval, cancellationToken);
         return Ok(new { deletedCount });
     }
 
@@ -114,7 +94,6 @@ public class ChartDrawingsController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             throw new UnauthorizedAccessException("Geçersiz veya bulunamayan kullanıcı kimliği.");
-
         return userId;
     }
 }
