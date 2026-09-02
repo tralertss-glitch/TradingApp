@@ -16,11 +16,7 @@ public class CandleService : ICandleService
     }
 
     // Henter candles for det valgte symbol og interval.
-    public async Task<IEnumerable<CandleResponseDto>> GetCandlesAsync(
-        int symbolId,
-        string interval,
-        int limit = 1000,
-        long? endTime = null)
+    public async Task<IEnumerable<CandleResponseDto>> GetCandlesAsync(int symbolId, string interval, int limit = 1000, long? endTime = null)
     {
         if (symbolId <= 0 || string.IsNullOrWhiteSpace(interval))
             return Enumerable.Empty<CandleResponseDto>();
@@ -32,7 +28,6 @@ public class CandleService : ICandleService
 
         var candles = await _candleRepository.GetCandlesAsync(symbolId, interval, limit, endTime);
         var normalizedInterval = interval.Trim().ToLowerInvariant();
-
         return candles
             .OrderBy(candle => candle.OpenTime)
             .Select(candle => candle.ToResponseDto(symbol, normalizedInterval))
@@ -84,7 +79,6 @@ public class CandleService : ICandleService
         var alert = dto.ToEntity(userId, symbol.Id, condition);
         var created = await _candleRepository.CreateAlertAsync(alert);
         created.Symbol = symbol;
-
         return created.ToResponseDto();
     }
 
@@ -133,7 +127,6 @@ public class CandleService : ICandleService
             await _candleRepository.UpdateAlertAsync(alert);
             triggeredAlerts.Add(alert.ToResponseDto());
         }
-
         return triggeredAlerts;
     }
 }
