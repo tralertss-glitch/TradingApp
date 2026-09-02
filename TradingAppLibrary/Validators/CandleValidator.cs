@@ -9,10 +9,7 @@ public sealed class CandleValidator : ICandleValidator
     private static readonly TimeSpan FutureTolerance = TimeSpan.FromMinutes(2);
 
     // Validerer den relevante operation.
-    public CandleValidationResult Validate(
-        ExchangeCandleDto candle,
-        string expectedSymbol,
-        string expectedInterval)
+    public CandleValidationResult Validate(ExchangeCandleDto candle, string expectedSymbol, string expectedInterval)
     {
         var errors = new List<string>();
 
@@ -62,10 +59,7 @@ public sealed class CandleValidator : ICandleValidator
     }
 
     // Validerer batch.
-    public CandleBatchValidationResult ValidateBatch(
-        IReadOnlyList<ExchangeCandleDto> candles,
-        string expectedSymbol,
-        string expectedInterval)
+    public CandleBatchValidationResult ValidateBatch(IReadOnlyList<ExchangeCandleDto> candles, string expectedSymbol, string expectedInterval)
     {
         if (candles.Count == 0)
             return CandleBatchValidationResult.Success();
@@ -88,8 +82,7 @@ public sealed class CandleValidator : ICandleValidator
         {
             if (candles[i].Time < candles[i - 1].Time)
             {
-                errors.Add(
-                    $"Candle batch is not ordered at indexes {i - 1}/{i}: {candles[i - 1].Time} -> {candles[i].Time}.");
+                errors.Add($"Candle batch is not ordered at indexes {i - 1}/{i}: {candles[i - 1].Time} -> {candles[i].Time}.");
             }
         }
 
@@ -116,12 +109,10 @@ public sealed class CandleValidator : ICandleValidator
                 }
                 else if (difference > 0 && difference < expectedStep.Value)
                 {
-                    errors.Add(
-                        $"Unexpected candle spacing between {ordered[i - 1].Time} and {ordered[i].Time}: {difference} ms.");
+                    errors.Add($"Unexpected candle spacing between {ordered[i - 1].Time} and {ordered[i].Time}: {difference} ms.");
                 }
             }
         }
-
         return new CandleBatchValidationResult(errors.Count == 0, errors, warnings);
     }
 
