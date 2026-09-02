@@ -1,5 +1,5 @@
-using System.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 using TradingAppLibrary.Data;
 using TradingAppLibrary.DTO;
 using TradingAppLibrary.Interfaces;
@@ -14,17 +14,14 @@ public sealed class SystemHealthService : ISystemHealthService
     private readonly AppDbContext _dbContext;
     private readonly IMarketDataRuntimeState _runtimeState;
 
-    public SystemHealthService(
-        AppDbContext dbContext,
-        IMarketDataRuntimeState runtimeState)
+    public SystemHealthService(AppDbContext dbContext, IMarketDataRuntimeState runtimeState)
     {
         _dbContext = dbContext;
         _runtimeState = runtimeState;
     }
 
     // Henter health.
-    public async Task<SystemHealthDto> GetHealthAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<SystemHealthDto> GetHealthAsync(CancellationToken cancellationToken = default)
     {
         var checkedAt = DateTime.UtcNow;
         var runtime = _runtimeState.GetSnapshot();
@@ -70,11 +67,7 @@ public sealed class SystemHealthService : ISystemHealthService
         var validationErrors = runtime.Exchanges.Values.Sum(x => x.ValidationErrorCount);
         var validationWarnings = runtime.Exchanges.Values.Sum(x => x.ValidationWarningCount);
 
-        var status = ResolveOverallStatus(
-            databaseHealthy,
-            timescaleHealthy,
-            candlesHypertableHealthy,
-            exchangeHealth);
+        var status = ResolveOverallStatus(databaseHealthy, timescaleHealthy, candlesHypertableHealthy, exchangeHealth);
 
         return new SystemHealthDto
         {
@@ -111,23 +104,17 @@ public sealed class SystemHealthService : ISystemHealthService
     // Kontrollerer om timescale installed.
     private async Task<bool> IsTimescaleInstalledAsync(CancellationToken cancellationToken)
     {
-        return await ExecuteBooleanScalarAsync(
-            "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'timescaledb');",
-            cancellationToken);
+        return await ExecuteBooleanScalarAsync("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'timescaledb');", cancellationToken);
     }
 
     // Kontrollerer om candles hypertable.
     private async Task<bool> IsCandlesHypertableAsync(CancellationToken cancellationToken)
     {
-        return await ExecuteBooleanScalarAsync(
-            "SELECT EXISTS (SELECT 1 FROM timescaledb_information.hypertables WHERE hypertable_schema = 'public' AND hypertable_name = 'Candles');",
-            cancellationToken);
+        return await ExecuteBooleanScalarAsync("SELECT EXISTS (SELECT 1 FROM timescaledb_information.hypertables WHERE hypertable_schema = 'public' AND hypertable_name = 'Candles');", cancellationToken);
     }
 
     // Kører boolean scalar.
-    private async Task<bool> ExecuteBooleanScalarAsync(
-        string sql,
-        CancellationToken cancellationToken)
+    private async Task<bool> ExecuteBooleanScalarAsync(string sql, CancellationToken cancellationToken)
     {
         try
         {
@@ -157,17 +144,12 @@ public sealed class SystemHealthService : ISystemHealthService
     }
 
     // Opbygger exchange health.
-    private static ExchangeHealthDto BuildExchangeHealth(
-        ExchangeHealthProjection exchange,
-        MarketDataRuntimeSnapshot runtime,
-        DateTime checkedAt)
+    private static ExchangeHealthDto BuildExchangeHealth(ExchangeHealthProjection exchange, MarketDataRuntimeSnapshot runtime, DateTime checkedAt)
     {
         runtime.Exchanges.TryGetValue(exchange.Code, out var state);
 
         var lastMessage = state?.LastRealtimeMessageAtUtc;
-        var realtimeFresh = lastMessage.HasValue &&
-                            checkedAt - lastMessage.Value <= RealtimeHealthyThreshold;
-
+        var realtimeFresh = lastMessage.HasValue && checkedAt - lastMessage.Value <= RealtimeHealthyThreshold;
         var realtimeConnected = state?.RealtimeConnected == true && realtimeFresh;
 
         var status = !exchange.IsActive
@@ -203,11 +185,7 @@ public sealed class SystemHealthService : ISystemHealthService
     }
 
     // Finder overall status.
-    private static string ResolveOverallStatus(
-        bool databaseHealthy,
-        bool timescaleHealthy,
-        bool candlesHypertableHealthy,
-        IReadOnlyCollection<ExchangeHealthDto> exchanges)
+    private static string ResolveOverallStatus(bool databaseHealthy, bool timescaleHealthy, bool candlesHypertableHealthy, IReadOnlyCollection<ExchangeHealthDto> exchanges)
     {
         if (!databaseHealthy || !timescaleHealthy || !candlesHypertableHealthy)
             return "Unhealthy";
@@ -232,11 +210,5 @@ public sealed class SystemHealthService : ISystemHealthService
     }
 
     // Behandler exchange health projection.
-    private sealed record ExchangeHealthProjection(
-        int Id,
-        string Code,
-        string Name,
-        bool IsActive,
-        int ActiveSymbolCount,
-        DateTime? LastCandleTimeUtc);
+    private sealed record ExchangeHealthProjection(int Id, string Code, string Name, bool IsActive, int ActiveSymbolCount, DateTime? LastCandleTimeUtc);
 }

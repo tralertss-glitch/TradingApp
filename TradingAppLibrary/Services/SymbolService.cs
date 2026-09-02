@@ -10,10 +10,7 @@ public class SymbolService : ISymbolService
     private readonly IHistoricalSyncQueue _historicalSyncQueue;
     private readonly IMarketDataStreamControl _streamControl;
 
-    public SymbolService(
-        ISymbolRepository symbolRepository,
-        IHistoricalSyncQueue historicalSyncQueue,
-        IMarketDataStreamControl streamControl)
+    public SymbolService(ISymbolRepository symbolRepository, IHistoricalSyncQueue historicalSyncQueue, IMarketDataStreamControl streamControl)
     {
         _symbolRepository = symbolRepository;
         _historicalSyncQueue = historicalSyncQueue;
