@@ -49,7 +49,6 @@ public class BinanceService : IExchangeService
                 quoteAsset.ToUpperInvariant(),
                 status.Equals("TRADING", StringComparison.OrdinalIgnoreCase)));
         }
-
         return symbols;
     }
 
@@ -71,12 +70,7 @@ public class BinanceService : IExchangeService
     }
 
     // Henter historical candles.
-    public async Task<IReadOnlyList<ExchangeCandleDto>> GetHistoricalCandlesAsync(
-        string symbol,
-        string interval,
-        int limit = 500,
-        long? startTime = null,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ExchangeCandleDto>> GetHistoricalCandlesAsync(string symbol, string interval, int limit = 500, long? startTime = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(symbol) || string.IsNullOrWhiteSpace(interval))
             return Array.Empty<ExchangeCandleDto>();
@@ -104,11 +98,7 @@ public class BinanceService : IExchangeService
     }
 
     // Behandler stream real time candles.
-    public async Task StreamRealTimeCandlesAsync(
-        IReadOnlyCollection<string> symbols,
-        string interval,
-        Func<ExchangeCandleDto, Task> onCandleReceived,
-        CancellationToken cancellationToken)
+    public async Task StreamRealTimeCandlesAsync(IReadOnlyCollection<string> symbols, string interval, Func<ExchangeCandleDto, Task> onCandleReceived, CancellationToken cancellationToken)
     {
         var streams = string.Join('/', symbols.Where(s => !string.IsNullOrWhiteSpace(s))
             .Select(s => $"{s.Trim().ToLowerInvariant()}@kline_{interval}"));
