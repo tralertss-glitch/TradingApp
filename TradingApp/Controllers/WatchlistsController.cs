@@ -35,18 +35,13 @@ public class WatchlistsController : ControllerBase
     /// Body: "Mine favoritter"
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<WatchlistResponseDto>> CreateWatchlist(
-        [FromBody] string name)
+    public async Task<ActionResult<WatchlistResponseDto>> CreateWatchlist([FromBody] string name)
     {
         if (string.IsNullOrWhiteSpace(name))
             return BadRequest(new { message = "Liste adı boş olamaz." });
 
         var userId = GetCurrentUserId();
-
-        var createdList = await _watchlistService.CreateWatchlistAsync(
-            userId,
-            name);
-
+        var createdList = await _watchlistService.CreateWatchlistAsync(userId, name);
         return Ok(createdList);
     }
 
@@ -55,8 +50,7 @@ public class WatchlistsController : ControllerBase
     /// POST: api/watchlists/items
     /// </summary>
     [HttpPost("items")]
-    public async Task<IActionResult> AddSymbolToWatchlist(
-        [FromBody] AddWatchlistItemDto dto)
+    public async Task<IActionResult> AddSymbolToWatchlist([FromBody] AddWatchlistItemDto dto)
     {
         if (dto.WatchlistId <= 0 || dto.SymbolId <= 0)
         {
@@ -88,13 +82,9 @@ public class WatchlistsController : ControllerBase
     /// DELETE: api/watchlists/1/items/10
     /// </summary>
     [HttpDelete("{watchlistId:int}/items/{symbolId:int}")]
-    public async Task<IActionResult> RemoveSymbolFromWatchlist(
-        int watchlistId,
-        int symbolId)
+    public async Task<IActionResult> RemoveSymbolFromWatchlist(int watchlistId, int symbolId)
     {
-        var success = await _watchlistService.RemoveSymbolFromWatchlistAsync(
-            watchlistId,
-            symbolId);
+        var success = await _watchlistService.RemoveSymbolFromWatchlistAsync(watchlistId, symbolId);
 
         if (!success)
         {
@@ -128,7 +118,6 @@ public class WatchlistsController : ControllerBase
                 message = "Watchlist not found."
             });
         }
-
         return NoContent();
     }
 
@@ -139,13 +128,10 @@ public class WatchlistsController : ControllerBase
             ?? User.FindFirst("sub")?.Value
             ?? User.FindFirst("id")?.Value;
 
-        if (string.IsNullOrWhiteSpace(userIdClaim) ||
-            !int.TryParse(userIdClaim, out var userId))
+        if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
         {
-            throw new UnauthorizedAccessException(
-                "Geçersiz veya bulunamayan kullanıcı kimliği.");
+            throw new UnauthorizedAccessException("Geçersiz veya bulunamayan kullanıcı kimliği.");
         }
-
         return userId;
     }
 }
