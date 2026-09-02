@@ -215,11 +215,25 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
                         watchlists={watchlists}
                         selectedSymbolId={currentActivePane.symbolId}
                         onSelectSymbol={(sym: SymbolResponseDto) => {
+                            const paneId = selectedPaneId;
+                            const currentPane = panes[paneId] ?? currentActivePane;
+                            const nextPane: PaneState = {
+                                ...currentPane,
+                                symbolId: sym.id,
+                                symbol: sym.name,
+                                exchangeCode: sym.exchangeCode,
+                            };
+
                             setPanes((prev) => ({
                                 ...prev,
-                                [selectedPaneId]: { ...prev[selectedPaneId], symbolId: sym.id, symbol: sym.name, exchangeCode: sym.exchangeCode },
+                                [paneId]: nextPane,
                             }));
-                            onActiveStateChange(sym.name, currentActivePane.interval, sym);
+
+                            onActiveStateChange(
+                                nextPane.symbol,
+                                nextPane.interval,
+                                sym
+                            );
                         }}
                         onCreateWatchlist={async (name: string) => {
                             const created = await watchlistService.createWatchlist(name);

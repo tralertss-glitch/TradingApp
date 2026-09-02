@@ -187,6 +187,9 @@ export const App: React.FC = () => {
 
     const isInitialFetchDone = useRef<boolean>(false);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const initialSymbolRef = useRef<string>(currentSymbol);
+    const initialSymbolIdRef = useRef<number>(currentSymbolId);
+    const initialExchangeCodeRef = useRef<string>(currentExchangeCode);
 
     // 🛑 Overvåg backend-forbindelsesfejl og health check.
     useEffect(() => {
@@ -236,15 +239,47 @@ export const App: React.FC = () => {
 
             if (Array.isArray(syms)) {
                 setActiveSymbols(syms);
-                const preferredName = (dbPrefs?.lastSymbol || currentSymbol || "").toUpperCase();
-                const selected = syms.find((s: SymbolResponseDto) => s.name.toUpperCase() === preferredName) || syms[0];
+
+                const preferredName = (
+                    dbPrefs?.lastSymbol ||
+                    initialSymbolRef.current ||
+                    ''
+                ).toUpperCase();
+
+                const selected =
+                    syms.find(
+                        (s: SymbolResponseDto) =>
+                            s.id === initialSymbolIdRef.current &&
+                            (!initialExchangeCodeRef.current ||
+                                s.exchangeCode.toUpperCase() ===
+                                initialExchangeCodeRef.current.toUpperCase())
+                    ) ||
+                    syms.find(
+                        (s: SymbolResponseDto) =>
+                            s.name.toUpperCase() === preferredName &&
+                            (!initialExchangeCodeRef.current ||
+                                s.exchangeCode.toUpperCase() ===
+                                initialExchangeCodeRef.current.toUpperCase())
+                    ) ||
+                    syms.find(
+                        (s: SymbolResponseDto) =>
+                            s.name.toUpperCase() === preferredName
+                    ) ||
+                    syms[0];
+
                 if (selected) {
                     setCurrentSymbol(selected.name);
                     setCurrentSymbolId(selected.id);
                     setCurrentExchangeCode(selected.exchangeCode);
                     localStorage.setItem(STORAGE_KEYS.SYMBOL, selected.name);
-                    localStorage.setItem('tradingapp_symbol_id', String(selected.id));
-                    localStorage.setItem('tradingapp_exchange_code', selected.exchangeCode);
+                    localStorage.setItem(
+                        'tradingapp_symbol_id',
+                        String(selected.id)
+                    );
+                    localStorage.setItem(
+                        'tradingapp_exchange_code',
+                        selected.exchangeCode
+                    );
                 }
             }
             if (Array.isArray(lists)) setWatchlists(lists);
@@ -257,13 +292,6 @@ export const App: React.FC = () => {
                     if (typeof setTheme === 'function') {
                         setTheme(themeVal, false);
                     }
-                }
-
-                // SYMBOL
-                const symbolVal = dbPrefs.lastSymbol;
-                if (symbolVal) {
-                    setCurrentSymbol(symbolVal);
-                    localStorage.setItem(STORAGE_KEYS.SYMBOL, symbolVal);
                 }
 
                 // INTERVAL
@@ -310,7 +338,7 @@ export const App: React.FC = () => {
         return () => {
             isMounted = false;
         };
-    }, [isAuthenticated, setTheme, currentSymbol]);
+    }, [isAuthenticated, setTheme]);
 
     // 3. Realtidslistener til SignalR til udløste alarmer.
     useEffect(() => {

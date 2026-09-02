@@ -1,21 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-    createChart,
-    CandlestickSeries,
-    BarSeries,
-    LineSeries,
-    AreaSeries,
-} from 'lightweight-charts';
-import type {
-    IChartApi,
-    ISeriesApi,
-    CandlestickData,
-    LineData,
-    Time,
-    LogicalRange,
-    IPriceLine,
-    MouseEventParams,
-} from 'lightweight-charts';
+import {createChart, CandlestickSeries, BarSeries, LineSeries, AreaSeries} from 'lightweight-charts';
+import type {IChartApi, ISeriesApi, CandlestickData, LineData, Time, LogicalRange, IPriceLine, MouseEventParams} from 'lightweight-charts';
 import { TrendingUp } from 'lucide-react';
 import { DrawingLayer } from './Chart/DrawingLayer';
 import { useTranslation } from 'react-i18next';
@@ -568,6 +553,22 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
                     let initialCandles = formatted;
                     const latestSegment = getLatestContiguousSegment(formatted, interval);
 
+                    // Vis den første gyldige side med det samme. En supplerende historical-request
+                    // må ikke holde hele chartet bag loading-overlayet.
+                    candlesRef.current = formatted;
+                    applyDataToSeries(formatted);
+                    focusLatestBars(formatted);
+
+                    const immediateLatest = formatted[formatted.length - 1];
+                    setLastCandle({
+                        time: Number(immediateLatest.time),
+                        open: immediateLatest.open,
+                        high: immediateLatest.high,
+                        low: immediateLatest.low,
+                        close: immediateLatest.close,
+                    });
+                    setLoading(false);
+
                     if (latestSegment.length < 100 && formatted.length > 0) {
                         try {
                             const oldestTimeMs = Number(formatted[0].time) * 1000;
@@ -702,7 +703,7 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
             }
 
             rafIdRef.current = requestAnimationFrame(() => {
-                if (isDisposedRef.current || !seriesRef.current) return;
+                if (!isCurrentGeneration() || !seriesRef.current) return;
 
                 const rawTime = Number(newCandle.time);
                 const rawSec = rawTime > 10000000000 ? Math.floor(rawTime / 1000) : rawTime;

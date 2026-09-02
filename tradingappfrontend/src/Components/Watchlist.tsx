@@ -333,7 +333,15 @@ export const Watchlist: React.FC<WatchlistProps> = ({
                                     <button
                                         type="button"
                                         disabled={!symbol}
-                                        onClick={() => symbol && onSelectSymbol(symbol)}
+                                        onClick={() => {
+                                            if (!symbol) return;
+
+                                            onSelectSymbol({
+                                                ...symbol,
+                                                name: item.symbol || symbol.name,
+                                                exchangeCode: item.exchange || symbol.exchangeCode,
+                                            });
+                                        }}
                                         className="flex-1 min-w-0 text-left px-3 py-2.5"
                                     >
                                         <div className="flex items-start justify-between gap-3">
