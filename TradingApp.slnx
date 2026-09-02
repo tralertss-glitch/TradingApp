@@ -1,17 +1,4 @@
 <Solution>
-  <Folder Name="/Documentation/" />
-  <Folder Name="/Documentation/Installationsvejledning/">
-    <File Path="../../../Downloads/TradingPro_Installationsvejledning.txt" />
-  </Folder>
-  <Folder Name="/Documentation/Rapport&amp;Bilags/">
-    <File Path="../../TradingPro_Docs/Bilag_1_Kravspecifikation_TradingPro_OzanKorkmaz.pdf" />
-    <File Path="../../TradingPro_Docs/Bilag_2_Diagrammer_TradingPro.pdf" />
-    <File Path="../../TradingPro_Docs/Bilag_3_Test_Rapport_TradingPro.pdf" />
-    <File Path="../../TradingPro_Docs/Bilag_4_Kodeindeksering_TradingPro.pdf" />
-    <File Path="../../TradingPro_Docs/Bilag_5_Brugervejledning_TradingPro.pdf" />
-    <File Path="../../TradingPro_Docs/Bilag_6_Udviklingslogbog_TradingPro.pdf" />
-    <File Path="../../TradingPro_Docs/Rapport_TradingPro_OzanKorkmaz.pdf" />
-  </Folder>
   <Project Path="TradingApp/TradingApp.csproj" />
   <Project Path="TradingAppFrontend/tradingappfrontend.esproj">
     <Build />
