@@ -1,7 +1,7 @@
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
+using System.Text;
 using TradingAppLibrary.Data;
 using TradingAppLibrary.DTO;
 using TradingAppLibrary.Enums;
@@ -18,12 +18,7 @@ public class AuthService : IAuthService
     private readonly EmailSettings _emailSettings;
     private readonly ILogger<AuthService> _logger;
 
-    public AuthService(
-        IUserRepository userRepository,
-        ITokenService tokenService,
-        IEmailService emailService,
-        IOptions<EmailSettings> emailSettings,
-        ILogger<AuthService> logger)
+    public AuthService(IUserRepository userRepository, ITokenService tokenService, IEmailService emailService, IOptions<EmailSettings> emailSettings, ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
