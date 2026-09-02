@@ -1,8 +1,4 @@
-﻿using Org.BouncyCastle.Crypto.Generators;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 using TradingAppLibrary.Data;
 using TradingAppLibrary.DTO;
 using TradingAppLibrary.Interfaces;
@@ -10,7 +6,7 @@ using TradingAppLibrary.Models;
 
 namespace TradingAppLibrary.Services
 {
-    public class UserService:IUserService
+    public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
 
@@ -67,7 +63,6 @@ namespace TradingAppLibrary.Services
             {
                 throw new InvalidOperationException("SuperAdmin hesabı kalıcı olarak silinemez.");
             }
-
             return await _userRepository.HardDeleteUserAsync(userId);
         }
         // Henter user preferences.
@@ -106,7 +101,6 @@ namespace TradingAppLibrary.Services
                 SettingsJson = json,
                 UpdatedAt = DateTime.UtcNow
             };
-
             await _userRepository.SavePreferencesAsync(preferences);
         }
 
@@ -129,7 +123,6 @@ namespace TradingAppLibrary.Services
             // Hash den nye adgangskode med PBKDF2, og gem den på brugeren.
             user.PasswordHash = PasswordHasher.HashPassword(newPassword);
             await _userRepository.UpdateAsync(user);
-
             return true;
         }
     }
