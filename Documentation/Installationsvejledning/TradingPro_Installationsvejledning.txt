@@ -61,13 +61,13 @@ appsettings.json
     "ExpiryMinutes": 1440
   },
   "Gemini": {
-    "ApiKey": "AQ.Ab8RN6IyPH9CrKUTCCnVJ_bJQnjzJzvESEMyxotRI4oWjWbAiQ"
+    "ApiKey": ""
   },
   "DeepSeek": {
-    "ApiKey": "sk-ba9fba2dad1c40a680cfb16e9438a107"
+    "ApiKey": ""
   },
   "Groq": {
-    "ApiKey": "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"
+    "ApiKey": ""
   },
   "AllowedHosts": "*",
   "EmailSettings": {
