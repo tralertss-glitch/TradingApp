@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { WifiOff } from 'lucide-react';
@@ -117,7 +117,7 @@ export const App: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { isDark, setTheme } = useTheme();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => authService.isAuthenticated());
-    const currentUser = useMemo(() => authService.getCurrentUser(), [isAuthenticated]);
+    const currentUser = authService.getCurrentUser();
 
     // 🛑 State for mistet backend-forbindelse.
     const [isBackendDown, setIsBackendDown] = useState<boolean>(false);
@@ -310,7 +310,7 @@ export const App: React.FC = () => {
         return () => {
             isMounted = false;
         };
-    }, [isAuthenticated, setTheme]);
+    }, [isAuthenticated, setTheme, currentSymbol]);
 
     // 3. Realtidslistener til SignalR til udløste alarmer.
     useEffect(() => {
@@ -322,8 +322,12 @@ export const App: React.FC = () => {
                 try {
                     const audio = new Audio('/sounds/alert.mp3');
                     audio.volume = 0.8;
-                    audio.play().catch(() => { });
-                } catch { }
+                    audio.play().catch((error: unknown) => {
+                        console.warn('[App] Alarm sesi çalınamadı:', error);
+                    });
+                } catch (error: unknown) {
+                    console.warn('[App] Alarm sesi oluşturulamadı:', error);
+                }
             }
 
             setAlerts((prev) =>

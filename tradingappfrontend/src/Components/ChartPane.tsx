@@ -1,6 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {createChart, CandlestickSeries, BarSeries, LineSeries, AreaSeries} from 'lightweight-charts';
-import type {IChartApi, ISeriesApi, CandlestickData, LineData, Time, LogicalRange, IPriceLine, MouseEventParams} from 'lightweight-charts';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+    createChart,
+    CandlestickSeries,
+    BarSeries,
+    LineSeries,
+    AreaSeries,
+} from 'lightweight-charts';
+import type {
+    IChartApi,
+    ISeriesApi,
+    CandlestickData,
+    LineData,
+    Time,
+    LogicalRange,
+    IPriceLine,
+    MouseEventParams,
+} from 'lightweight-charts';
 import { TrendingUp } from 'lucide-react';
 import { DrawingLayer } from './Chart/DrawingLayer';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +25,12 @@ import type { CandleData, ChartType } from '../Types/candle';
 import type { IndicatorConfig } from '../Types/indicator';
 import type { ChartVisualSettings } from '../Types/chartSettings';
 import type { Alert } from '../Types/alert';
-import {calculateSMA, calculateEMA, calculateBollingerBands, calculateRSI} from '../Utils/indicatorCalculators';
+import {
+    calculateSMA,
+    calculateEMA,
+    calculateBollingerBands,
+    calculateRSI,
+} from '../Utils/indicatorCalculators';
 
 interface ChartPaneProps {
     symbolId: number;
@@ -163,6 +183,8 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
     const [lastCandle, setLastCandle] = useState<CandleData | null>(null);
     const [drawingRenderVersion, setDrawingRenderVersion] = useState(0);
     const [drawingReady, setDrawingReady] = useState(false);
+    const [drawingChart, setDrawingChart] = useState<IChartApi | null>(null);
+    const [drawingSeries, setDrawingSeries] = useState<ChartSeriesApi | null>(null);
     const [historyPending, setHistoryPending] = useState(false);
 
     const candlesRef = useRef<CandlestickData<Time>[]>([]);
@@ -173,10 +195,11 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
     const isNearLeftEdgeRef = useRef<boolean>(false);
 
     const isDisposedRef = useRef<boolean>(false);
+    const effectGenerationRef = useRef<number>(0);
     const rafIdRef = useRef<number | null>(null);
 
     // Opdaterer de aktuelle data i brugergrænsefladen.
-    const updateIndicatorsData = (candles: CandlestickData<Time>[]) => {
+    const updateIndicatorsData = useCallback((candles: CandlestickData<Time>[]) => {
         if (isDisposedRef.current || !chartRef.current || candles.length === 0) return;
 
         indicators.forEach((ind) => {
@@ -204,7 +227,7 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
                 console.warn(`[ChartPane] ${ind.name} indikatör güncelleme hatası:`, e);
             }
         });
-    };
+    }, [indicators]);
 
     // 🔔 Tegn prisalarmer som stiplede linjer på chartet.
     useEffect(() => {
@@ -215,7 +238,9 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
         alertLinesRef.current.forEach((line) => {
             try {
                 series.removePriceLine(line);
-            } catch { }
+            } catch (error: unknown) {
+                console.warn('[ChartPane] Alarm çizgisi kaldırılamadı:', error);
+            }
         });
         alertLinesRef.current = [];
 
@@ -249,6 +274,11 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
+
+        const indicatorSeries = indicatorSeriesRef.current;
+        const generation = ++effectGenerationRef.current;
+        const isCurrentGeneration = () =>
+            effectGenerationRef.current === generation && !isDisposedRef.current;
 
         isDisposedRef.current = false;
         chartContainerRef.current.innerHTML = '';
@@ -349,6 +379,13 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
         }
         seriesRef.current = series;
 
+        const drawingStateTimer = window.setTimeout(() => {
+            if (isCurrentGeneration()) {
+                setDrawingChart(chart);
+                setDrawingSeries(series);
+            }
+        }, 0);
+
         indicators.forEach((ind) => {
             if (!ind.enabled) return;
 
@@ -415,7 +452,7 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
 
         // Håndterer apply data to series.
         const applyDataToSeries = (candles: CandlestickData<Time>[]) => {
-            if (isDisposedRef.current || !seriesRef.current) return;
+            if (!isCurrentGeneration() || !seriesRef.current) return;
 
             try {
                 if (chartType === 'line' || chartType === 'area') {
@@ -441,7 +478,7 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
 
         // Henter candles til det valgte symbol og timeframe.
         const fetchCandles = async (endTime?: number) => {
-            if (isDisposedRef.current || isLoadingMoreRef.current) return;
+            if (!isCurrentGeneration() || isLoadingMoreRef.current) return;
             if (endTime && !hasMoreDataRef.current) return;
             if (endTime && Date.now() < lazyLoadCooldownUntilRef.current) return;
 
@@ -452,7 +489,7 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
                 const pageSize = 500;
                 const data = await candleApi.getHistoricalCandles(symbolId, interval, pageSize, endTime);
 
-                if (isDisposedRef.current) return;
+                if (!isCurrentGeneration()) return;
 
                 if (!data || data.length === 0) {
                     // Et tomt resultat betyder kun, når der faktisk anmodes om en ældre side,
@@ -482,7 +519,7 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
                     )
                     .sort((a, b) => Number(a.time) - Number(b.time));
 
-                if (isDisposedRef.current || formatted.length === 0) return;
+                if (!isCurrentGeneration() || formatted.length === 0) return;
 
                 if (endTime) {
                     const current = candlesRef.current;
@@ -512,7 +549,9 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
                                     from: previousRange.from + prependedCount,
                                     to: previousRange.to + prependedCount,
                                 });
-                            } catch { }
+                            } catch (error: unknown) {
+                                console.warn('[ChartPane] Görünür aralık geri yüklenemedi:', error);
+                            }
                         }
                     }
 
@@ -538,6 +577,8 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
                                 pageSize,
                                 oldestTimeMs
                             );
+
+                            if (!isCurrentGeneration()) return;
 
                             const olderFormularatted: CandlestickData<Time>[] = (olderData ?? [])
                                 .map((c) => {
@@ -619,11 +660,11 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
                     }
                 }
             } catch (err) {
-                if (!isDisposedRef.current) {
+                if (isCurrentGeneration()) {
                     console.error('[ChartPane] Veri çekme hatası:', err);
                 }
             } finally {
-                if (!isDisposedRef.current) {
+                if (isCurrentGeneration()) {
                     setLoading(false);
                     isLoadingMoreRef.current = false;
                 }
@@ -652,7 +693,7 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
 
         // Opdaterer de aktuelle data i brugergrænsefladen.
         const handleCandleUpdate = (newCandle: CandleData) => {
-            if (isDisposedRef.current || !seriesRef.current || !chartRef.current) return;
+            if (!isCurrentGeneration() || !seriesRef.current || !chartRef.current) return;
             if (newCandle.symbolId && newCandle.symbolId !== symbolId) return;
             if (newCandle.exchange && newCandle.exchange.toUpperCase() !== exchangeCode.toUpperCase()) return;
 
@@ -750,10 +791,10 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
             if (!hasResolvedSymbol) return;
 
             await fetchCandles();
-            if (isDisposedRef.current) return;
+            if (!isCurrentGeneration()) return;
             try {
                 await signalrService.startConnection();
-                if (isDisposedRef.current) return;
+                if (!isCurrentGeneration()) return;
                 await signalrService.subscribeToSymbolGroup(exchangeCode, symbol);
                 signalrService.subscribeToCandleUpdates(handleCandleUpdate);
             } catch (e) {
@@ -766,7 +807,7 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
         init();
 
         const resizeObserver = new ResizeObserver((entries) => {
-            if (isDisposedRef.current || !entries || entries.length === 0) return;
+            if (!isCurrentGeneration() || !entries || entries.length === 0) return;
             const { width: w, height: h } = entries[0].contentRect;
             if (chartRef.current && w > 0 && h > 0) {
                 chartRef.current.applyOptions({ width: w, height: h });
@@ -777,6 +818,9 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
         resizeObserver.observe(chartContainerRef.current);
 
         return () => {
+            if (effectGenerationRef.current === generation) {
+                effectGenerationRef.current += 1;
+            }
             isDisposedRef.current = true;
 
             if (rafIdRef.current) {
@@ -788,22 +832,36 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
                 lazyRetryTimerRef.current = null;
             }
 
+            window.clearTimeout(drawingStateTimer);
             resizeObserver.disconnect();
             if (hasResolvedSymbol) {
                 void signalrService.unsubscribeFromSymbolGroup(exchangeCode, symbol);
             }
             signalrService.unsubscribeFromCandleUpdates(handleCandleUpdate);
 
-            indicatorSeriesRef.current.clear();
+            indicatorSeries.clear();
             alertLinesRef.current = [];
             setDrawingReady(false);
+            setDrawingChart(null);
+            setDrawingSeries(null);
             seriesRef.current = null;
             if (chartRef.current) {
                 chartRef.current.remove();
                 chartRef.current = null;
             }
         };
-    }, [symbolId, exchangeCode, symbol, interval, chartType, isDark, indicators, chartSettings, onPriceClick]);
+    }, [
+        symbolId,
+        exchangeCode,
+        symbol,
+        interval,
+        chartType,
+        isDark,
+        indicators,
+        chartSettings,
+        onPriceClick,
+        updateIndicatorsData,
+    ]);
 
     const isPriceUp = lastCandle ? lastCandle.close >= lastCandle.open : true;
     const priceColor = isPriceUp ? 'text-[#089981]' : 'text-[#f23645]';
@@ -878,8 +936,8 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
                 {historyPending && !loading && (
                     <div
                         className={`absolute left-3 top-3 z-10 flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[11px] shadow-sm backdrop-blur-sm pointer-events-none select-none ${isDark
-                                ? 'border-[#2a2e39] bg-[#131722]/85 text-gray-300'
-                                : 'border-gray-200 bg-white/90 text-gray-600'
+                            ? 'border-[#2a2e39] bg-[#131722]/85 text-gray-300'
+                            : 'border-gray-200 bg-white/90 text-gray-600'
                             }`}
                     >
                         <span className="h-1.5 w-1.5 rounded-full bg-[#2962ff] animate-pulse" />
@@ -904,8 +962,8 @@ export const ChartPane: React.FC<ChartPaneProps> = ({
                         interval={interval}
                         isDark={isDark}
                         isSelected={isSelected}
-                        chart={chartRef.current}
-                        series={seriesRef.current}
+                        chart={drawingChart}
+                        series={drawingSeries}
                         renderVersion={drawingRenderVersion}
                     />
                 )}

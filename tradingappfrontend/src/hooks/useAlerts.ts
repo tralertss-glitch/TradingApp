@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { HubConnection } from '@microsoft/signalr';
 import type { Alert, CreateAlertRequest } from '../Types/alert';
 import { alertService } from '../Services/alertService';
@@ -22,7 +22,13 @@ export const useAlerts = (
     }, []);
 
     useEffect(() => {
-        fetchAlerts();
+        const timeoutId = window.setTimeout(() => {
+            void fetchAlerts();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
     }, [fetchAlerts]);
 
     // Realtidslistener til "ReceiveAlertTriggered" via SignalR.
@@ -41,7 +47,9 @@ export const useAlerts = (
                     audio.play().catch((err) => {
                         console.warn('[useAlerts] Tarayıcı ses çalmayı engelledi:', err);
                     });
-                } catch { }
+                } catch (error: unknown) {
+                    console.warn('[useAlerts] Alarm sesi oluşturulamadı:', error);
+                }
             }
 
             // Opdater state, og markér alarmen som udløst.
