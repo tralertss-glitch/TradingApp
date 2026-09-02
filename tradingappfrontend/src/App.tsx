@@ -247,6 +247,12 @@ export const App: React.FC = () => {
                 ).toUpperCase();
 
                 const selected =
+                    // 1. Foretræk symbolet fra databasen (UserPreferences).
+                    syms.find(
+                        (s: SymbolResponseDto) =>
+                            s.name.toUpperCase() === preferredName
+                    ) ||
+                    // 2. Hvis databasen ikke matcher, bruges den gemte lokale id/exchange.
                     syms.find(
                         (s: SymbolResponseDto) =>
                             s.id === initialSymbolIdRef.current &&
@@ -254,17 +260,7 @@ export const App: React.FC = () => {
                                 s.exchangeCode.toUpperCase() ===
                                 initialExchangeCodeRef.current.toUpperCase())
                     ) ||
-                    syms.find(
-                        (s: SymbolResponseDto) =>
-                            s.name.toUpperCase() === preferredName &&
-                            (!initialExchangeCodeRef.current ||
-                                s.exchangeCode.toUpperCase() ===
-                                initialExchangeCodeRef.current.toUpperCase())
-                    ) ||
-                    syms.find(
-                        (s: SymbolResponseDto) =>
-                            s.name.toUpperCase() === preferredName
-                    ) ||
+                    // 3. Sidste fallback er det første aktive symbol.
                     syms[0];
 
                 if (selected) {
