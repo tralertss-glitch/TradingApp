@@ -1,7 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using TradingAppLibrary.Models;
 using TradingAppLibrary.Repositories;
 using TradingAppTest.Helpers;
-
 namespace TradingAppTest.Repositories;
 
 public class UserRepositoryTests
